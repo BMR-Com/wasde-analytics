@@ -43,7 +43,17 @@ jobs:
           for a in assets:
               print(f'  - name: [{a[\"name\"]}]  size: {a[\"size\"]} bytes  id: {a[\"id\"]}')
           "
-
+      - name: Debug environment
+        env:
+          GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          echo "=== Python version ==="
+          python --version
+          echo "=== Files in repo root ==="
+          ls -la
+          echo "=== process.py exists? ==="
+          cat process.py | head -20
       - name: Run pipeline
         env:
           GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
