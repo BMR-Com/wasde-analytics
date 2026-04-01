@@ -16,32 +16,37 @@ header h1{font-size:1.1rem;font-weight:500}
 .top-controls{display:flex;gap:16px;padding:1rem 2rem;background:#fff;border-bottom:1px solid #e5e5e0;flex-wrap:wrap;align-items:flex-end}
 .ctrl label{display:block;font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
 select{padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff;cursor:pointer}
-select.wide{min-width:200px}
+select.wide{min-width:220px}
 .section{padding:1.5rem 2rem;max-width:1300px;margin:0 auto}
 .sec-title{font-size:12px;font-weight:600;color:#1a2e1a;margin-bottom:1rem;text-transform:uppercase;letter-spacing:.08em;border-left:3px solid #1a2e1a;padding-left:.6rem}
-/* 2 tables per row */
 .tables-row{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
 @media(max-width:900px){.tables-row{grid-template-columns:1fr}}
 .table-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;overflow:hidden}
 .tc-head{background:#1a2e1a;color:#fff;padding:.55rem 1rem;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
-.tc-head select{background:#2a4a2a;color:#fff;border:1px solid #3a6a3a;border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;max-width:180px}
+.tc-head select{background:#2a4a2a;color:#fff;border:1px solid #3a6a3a;border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;max-width:200px}
 .tc-head select option{background:#1a2e1a}
 .tbl-scroll{overflow-x:auto}
 table.bs{width:100%;border-collapse:collapse;font-size:11.5px}
 table.bs th{background:#f5f5f3;padding:5px 7px;text-align:center;font-weight:500;color:#555;border-bottom:1px solid #e5e5e0;white-space:nowrap}
-table.bs th.ac{text-align:left;min-width:145px}
+table.bs th.ac{text-align:left;min-width:150px}
 table.bs th.yg{background:#edf2ed;color:#1a2e1a;font-size:11px;border-bottom:1px solid #c8d8c8}
 table.bs th.pg{background:#fff8e6;color:#7a5000;font-size:11px;border-bottom:1px solid #e8d8a0}
 table.bs td{padding:4px 7px;border-bottom:1px solid #f0f0ee;text-align:right;white-space:nowrap}
-table.bs td.an{text-align:left;color:#333;font-size:11px;max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-table.bs td.derived{color:#555;font-style:italic}
-table.bs tr.sep td{border-top:2px solid #e5e5e0;padding-top:6px}
+table.bs td.an{text-align:left;color:#333;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+table.bs tr.hl-es td{background:#fef9e7;font-weight:600}
+table.bs tr.hl-es td.an{color:#7a5000}
+table.bs tr.hl-prod td{background:#e8f5e9}
+table.bs tr.hl-prod td.an{color:#1a5e20}
+table.bs tr.sep-top td{border-top:2px solid #d0d0cc}
 table.bs tr:last-child td{border-bottom:none}
-table.bs tr:hover td{background:#fafaf8}
+table.bs tr:hover td{background:rgba(0,0,0,.03)}
+table.bs tr.hl-es:hover td{background:#fef3c7}
+table.bs tr.hl-prod:hover td{background:#d4edda}
 .up{color:#166534}.dn{color:#991b1b}
 .chg{font-size:9.5px}
 .pv{background:#fffbf0;color:#7a5000;font-weight:500}
-.pv-derived{background:#f0f4ff;color:#1e40af;font-style:italic}
+.pv-derived{background:#eff6ff;color:#1e40af;font-style:italic}
+.unit-warn{font-size:9px;color:#dc2626}
 .summary-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:1.25rem;margin-bottom:1.25rem}
 .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:.75rem}
 @media(max-width:700px){.summary-grid{grid-template-columns:1fr}}
@@ -65,9 +70,9 @@ table.bs tr:hover td{background:#fafaf8}
 #chart-container{position:relative;height:380px}
 .spinner{text-align:center;padding:2rem;color:#aaa;font-size:12px}
 .no-data{text-align:center;padding:1.5rem;color:#bbb;font-size:11px}
-.legend-row{display:flex;gap:1.2rem;padding:.4rem 1rem;background:#f9f9f7;border-top:1px solid #f0f0ee;font-size:10px;color:#888}
-.leg-item{display:flex;align-items:center;gap:4px}
-.leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.tbl-legend{display:flex;gap:1rem;padding:.4rem 1rem;background:#f9f9f7;border-top:1px solid #f0f0ee;font-size:10px;color:#777;flex-wrap:wrap}
+.tll{display:flex;align-items:center;gap:4px}
+.tll-box{width:10px;height:10px;border-radius:2px;display:inline-block}
 </style>
 </head>
 <body>
@@ -95,10 +100,8 @@ table.bs tr:hover td{background:#fafaf8}
 </div>
 
 <div class="section">
-
   <div class="sec-title">Balance Sheet — Last 2 Releases &times; 3 Latest Marketing Years</div>
 
-  <!-- Row 1: World + US -->
   <div class="tables-row">
     <div class="table-card">
       <div class="tc-head"><span>World</span></div>
@@ -110,7 +113,6 @@ table.bs tr:hover td{background:#fafaf8}
     </div>
   </div>
 
-  <!-- Row 2: Custom regions -->
   <div class="tables-row">
     <div class="table-card">
       <div class="tc-head">
@@ -128,7 +130,6 @@ table.bs tr:hover td{background:#fafaf8}
     </div>
   </div>
 
-  <!-- World + US Analysis -->
   <div class="summary-card">
     <div class="sec-title" style="margin-bottom:0">Analysis &amp; Prediction — World &amp; United States</div>
     <div class="summary-grid">
@@ -143,7 +144,6 @@ table.bs tr:hover td{background:#fafaf8}
     </div>
   </div>
 
-  <!-- Custom region predictions -->
   <div class="sec-title">Prediction — Custom Regions</div>
   <div class="custom-pred-wrap">
     <div class="pred-card">
@@ -156,7 +156,6 @@ table.bs tr:hover td{background:#fafaf8}
     </div>
   </div>
 
-  <!-- Chart -->
   <div class="chart-card">
     <div class="sec-title">Forecast Evolution Chart</div>
     <div class="chart-controls">
@@ -173,7 +172,6 @@ table.bs tr:hover td{background:#fafaf8}
     <div class="pills" id="mkt-pills"></div>
     <div id="chart-container"><canvas id="myChart"></canvas></div>
   </div>
-
 </div>
 
 <script>
@@ -188,43 +186,77 @@ const WASDE_2026 = [
   '2026-09-11','2026-10-09','2026-11-10','2026-12-10'
 ];
 
-// ── Canonical attribute display order ─────────────────────────
-// Patterns matched case-insensitively; first match wins
-const ATTR_ORDER = [
-  /^area.*(planted|seeded)/i,
-  /^area.*(harv)/i,
-  /^yield/i,
-  /^beginning.stock/i,
-  /^production$/i,
-  /^import/i,
-  /^supply.*(total|,\s*total)/i,
-  /^domestic.use/i,
-  /^export.*(total|,\s*total)/i,
-  /^use.*(total|,\s*total)/i,
-  /^unaccounted/i,
-  /^ending.stock/i,
-  /^avg.*farm.*price/i,
-  /^average.*farm.*price/i,
+// ── Attribute ordering rules ───────────────────────────────────
+// Each entry: [regex, groupIndex]
+// Group index creates visual separators between logical sections
+const ATTR_RULES = [
+  [/^area.*(planted|seeded)/i,            0],
+  [/^area.*(harv)/i,                      0],
+  [/^yield/i,                             1],
+  [/^beginning.stock/i,                   2],
+  [/^production/i,                        2],
+  [/^import/i,                            2],
+  [/^supply.*(total|,\s*total)/i,         2],
+  [/^crushing/i,                          3],
+  [/^domestic.use/i,                      3],
+  [/^domestic.disappear/i,                3],
+  [/^biofuel/i,                           3],
+  [/^food.*feed.*indust/i,                3],
+  [/^food.*industrial/i,                  3],
+  [/^export/i,                            3],
+  [/^seed/i,                              3],
+  [/^residual/i,                          3],
+  [/^use.*(total|,\s*total)/i,            3],
+  [/^unaccounted/i,                       4],
+  [/^ending.stock/i,                      4],
+  [/^avg.*farm.*price/i,                  5],
+  [/^average.*farm.*price/i,              5],
+  [/^avg.*price/i,                        5],
 ];
 
-// Attributes that are DERIVED (no direct model prediction)
-const DERIVED_ATTRS = [
+// Attributes to completely EXCLUDE from display
+const EXCLUDE_PATTERNS = [
+  /farm.price.*high/i,
+  /farm.price.*low/i,
+  /price.*high/i,
+  /price.*low/i,
+  /^avg.*farm.*price.*high/i,
+  /^avg.*farm.*price.*low/i,
+];
+
+// Attributes that are DERIVED (no direct model, computed from components)
+const DERIVED_PATTERNS = [
   /^supply.*(total|,\s*total)/i,
   /^use.*(total|,\s*total)/i,
   /^ending.stock/i,
 ];
 
 function isDerived(attr) {
-  return DERIVED_ATTRS.some(rx => rx.test(attr.trim()));
+  return DERIVED_PATTERNS.some(rx => rx.test(attr.trim()));
+}
+
+function isExcluded(attr) {
+  return EXCLUDE_PATTERNS.some(rx => rx.test(attr.trim()));
 }
 
 function attrSortKey(attr) {
   const a = attr.trim();
-  for (let i = 0; i < ATTR_ORDER.length; i++) {
-    if (ATTR_ORDER[i].test(a)) return i;
+  for (let i = 0; i < ATTR_RULES.length; i++) {
+    if (ATTR_RULES[i][0].test(a)) return i * 100 + ATTR_RULES[i][1];
   }
-  return ATTR_ORDER.length; // unknown → end
+  return 9999;
 }
+
+function attrGroup(attr) {
+  const a = attr.trim();
+  for (const [rx, grp] of ATTR_RULES) {
+    if (rx.test(a)) return grp;
+  }
+  return 99;
+}
+
+function isEndingStocks(attr) { return /^ending.stock/i.test(attr.trim()); }
+function isProduction(attr)   { return /^production/i.test(attr.trim()); }
 
 function getNextReleaseInfo() {
   const now = new Date();
@@ -247,7 +279,7 @@ function getNextReleaseInfo() {
 }
 
 let manifest=null, currentData=null, chart=null;
-let activeYears=new Set(), sorted_attrs=[], NR_MONTH='';
+let activeYears=new Set(), display_attrs=[], NR_MONTH='';
 
 // ── Boot ──────────────────────────────────────────────────────
 async function boot() {
@@ -281,10 +313,9 @@ async function onCommodityChange() {
   const res  = await fetch(BASE + '/' + file);
   currentData = await res.json();
 
-  // Deduplicate then sort by canonical order
-  sorted_attrs = sortAndDedupeAttrs(currentData.attributes);
+  // Build sorted, deduplicated, excluded-filtered attribute list
+  display_attrs = buildDisplayAttrs(currentData.attributes);
 
-  // Region selects
   const regions = currentData.regions;
   document.getElementById('sel-region').innerHTML =
     regions.map(r => '<option>'+r+'</option>').join('');
@@ -299,15 +330,13 @@ async function onCommodityChange() {
     s.value = others[i] || regions[Math.min(i+2, regions.length-1)] || regions[0];
   });
 
-  // Chart attribute select (use sorted list)
   const aSel = document.getElementById('sel-attribute');
-  aSel.innerHTML = sorted_attrs.map(a => '<option>'+a+'</option>').join('');
-  const esIdx = sorted_attrs.findIndex(a => /ending.stock/i.test(a));
+  aSel.innerHTML = display_attrs.map(a => '<option>'+a+'</option>').join('');
+  const esIdx = display_attrs.findIndex(a => /^ending.stock/i.test(a));
   if (esIdx >= 0) aSel.selectedIndex = esIdx;
 
   activeYears = new Set(currentData.marketYears.slice(-5));
   buildPills(currentData.marketYears);
-
   renderAllTables();
   renderSummaryAndPrediction();
   renderCustomPredictions();
@@ -321,11 +350,12 @@ function setLoading() {
   });
 }
 
-// ── Attribute helpers ─────────────────────────────────────────
-function sortAndDedupeAttrs(attrs) {
+// ── Attribute processing ──────────────────────────────────────
+function buildDisplayAttrs(attrs) {
   // 1. Deduplicate (case+space insensitive, prefer Title Case)
   const seen = new Map();
   attrs.forEach(a => {
+    if (isExcluded(a)) return;
     const norm = a.trim().toLowerCase().replace(/\s+/g,' ');
     if (!seen.has(norm)) {
       seen.set(norm, a);
@@ -335,8 +365,8 @@ function sortAndDedupeAttrs(attrs) {
         seen.set(norm, a);
     }
   });
-  // 2. Sort by canonical order
-  return [...seen.values()].sort((a, b) => attrSortKey(a) - attrSortKey(b));
+  // 2. Sort
+  return [...seen.values()].sort((a,b) => attrSortKey(a) - attrSortKey(b));
 }
 
 function resolveAttr(attr) {
@@ -350,20 +380,22 @@ function resolveAttr(attr) {
 function getSeries(region, attr, mktYear) {
   const key = region + '||' + attr + '||' + mktYear;
   if (currentData.data[key])
-    return currentData.data[key].sort((a,b) => a.releaseNum - b.releaseNum);
+    return currentData.data[key].sort((a,b)=>a.releaseNum-b.releaseNum);
   const norm = key.toLowerCase().replace(/\s+/g,' ');
   const found = Object.keys(currentData.data).find(
     k => k.toLowerCase().replace(/\s+/g,' ') === norm);
   return found
-    ? currentData.data[found].sort((a,b) => a.releaseNum - b.releaseNum)
+    ? currentData.data[found].sort((a,b)=>a.releaseNum-b.releaseNum)
     : [];
 }
 
-// Get the latest value for an attr at a specific wasdeNum
-function getValueAtWasde(region, attr, mktYear, wasdeNum) {
-  const series = getSeries(region, attr, mktYear);
-  const entry  = series.find(d => d.wasdeNum === wasdeNum);
-  return entry ? entry.value : null;
+function getCanonUnit(region, attr) {
+  if (!currentData.unitMap) return '';
+  const key  = region + '||' + attr;
+  const norm = key.toLowerCase().replace(/\s+/g,' ');
+  const found = Object.keys(currentData.unitMap).find(
+    k => k.toLowerCase().replace(/\s+/g,' ') === norm);
+  return found ? currentData.unitMap[found] : '';
 }
 
 function findRegion(kws) {
@@ -374,7 +406,7 @@ function findRegion(kws) {
 
 function findAttrByPattern(patterns) {
   for (const rx of patterns) {
-    const found = sorted_attrs.find(a => rx.test(a.trim()));
+    const found = display_attrs.find(a => rx.test(a.trim()));
     if (found) return resolveAttr(found);
   }
   return null;
@@ -382,8 +414,7 @@ function findAttrByPattern(patterns) {
 
 function getLastNWasdeNums(n) {
   const nums = new Set();
-  Object.values(currentData.data).forEach(arr =>
-    arr.forEach(d => nums.add(d.wasdeNum)));
+  Object.values(currentData.data).forEach(arr=>arr.forEach(d=>nums.add(d.wasdeNum)));
   return [...nums].sort((a,b)=>b-a).slice(0,n).sort((a,b)=>a-b);
 }
 
@@ -393,39 +424,14 @@ function getLatestNMktYears(n) {
 
 function fmtNum(v) {
   if (v===null||v===undefined) return '—';
-  const n = parseFloat(v);
-  return isNaN(n) ? '—' : n.toLocaleString(undefined,{maximumFractionDigits:2});
+  const n=parseFloat(v);
+  return isNaN(n)?'—':n.toLocaleString(undefined,{maximumFractionDigits:2});
 }
 
-// ── Unit check: per-cell runtime safety ──────────────────────
-// Returns the value converted to canonical unit if mismatch detected
-const UNIT_CONV = {
-  "thousand metric tons→million metric tons": 0.001,
-  "million metric tons→thousand metric tons": 1000,
-  "thousand bushels→million bushels": 0.001,
-  "million bushels→thousand bushels": 1000,
-  "thousand 480-lb bales→million 480-lb bales": 0.001,
-  "million 480-lb bales→thousand 480-lb bales": 1000,
-};
-
-function safeVal(entry, canonicalUnit) {
-  if (!entry) return null;
-  const v = entry.value;
-  if (!canonicalUnit || !entry.unit) return v;
-  const from = entry.unit.trim().toLowerCase();
-  const to   = canonicalUnit.trim().toLowerCase();
-  if (from === to) return v;
-  const factor = UNIT_CONV[from + '→' + to];
-  return factor !== undefined ? v * factor : v;
-}
-
-function getCanonicalUnit(region, attr) {
-  if (!currentData.unitMap) return '';
-  const key  = region + '||' + attr;
-  const norm = key.toLowerCase().replace(/\s+/g,' ');
-  const found = Object.keys(currentData.unitMap).find(
-    k => k.toLowerCase().replace(/\s+/g,' ') === norm);
-  return found ? currentData.unitMap[found] : '';
+// Get value from a series entry, checking unitOk flag
+function entryVal(entry) {
+  if (!entry) return {val:null, ok:true};
+  return {val: entry.value, ok: entry.unitOk !== false};
 }
 
 // ── Prediction model ──────────────────────────────────────────
@@ -435,16 +441,17 @@ function linReg(xs, ys) {
   const num=xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0);
   const den=xs.reduce((s,x)=>s+(x-mx)**2,0);
   if(den===0) return null;
-  const b=num/den, a=my-b*mx;
-  return {predict: x=>a+b*x};
+  const b=num/den,a=my-b*mx;
+  return {predict:x=>a+b*x};
 }
 
-// Direct model for non-derived attributes
-function fitDirect(region, attr, mktYear) {
-  const series = getSeries(region, attr, mktYear);
-  if (series.length < 2) return null;
-  const xs    = series.map(d=>d.releaseNum);
-  const ys    = series.map(d=>d.value);
+function fitDirect(region, resolvedAttr, mktYear) {
+  const series = getSeries(region, resolvedAttr, mktYear);
+  // Only use entries with valid units
+  const valid  = series.filter(d => d.unitOk !== false);
+  if (valid.length < 2) return null;
+  const xs    = valid.map(d=>d.releaseNum);
+  const ys    = valid.map(d=>d.value);
   const nextX = Math.max(...xs) + 1;
   const lm    = linReg(xs, ys);
   if (!lm) return null;
@@ -455,7 +462,7 @@ function fitDirect(region, attr, mktYear) {
     .filter(y=>y!==mktYear && y<mktYear).slice(-6);
   const moms = [];
   prevYears.forEach(py => {
-    const ps   = getSeries(region, attr, py);
+    const ps   = getSeries(region, resolvedAttr, py).filter(d=>d.unitOk!==false);
     const atN  = ps.find(d=>d.releaseNum===xs[xs.length-1]);
     const atN1 = ps.find(d=>d.releaseNum===nextX);
     if (atN && atN1) moms.push(atN1.value - atN.value);
@@ -463,71 +470,68 @@ function fitDirect(region, attr, mktYear) {
 
   let nextVal=regPred, method='linear regression';
   if (moms.length >= 2) {
-    const avgMom = moms.reduce((a,b)=>a+b,0)/moms.length;
-    nextVal = 0.5*regPred + 0.5*(lastVal+avgMom);
-    method  = 'blended ('+moms.length+'yr hist)';
+    const avgMom=moms.reduce((a,b)=>a+b,0)/moms.length;
+    nextVal=0.5*regPred+0.5*(lastVal+avgMom);
+    method='blended ('+moms.length+'yr hist)';
   }
-  return {nextVal: Math.round(nextVal*100)/100, lastVal, nextX, method, isDerived: false};
+  return {nextVal:Math.round(nextVal*100)/100, lastVal, method, isDerived:false};
 }
 
-// Get predicted value for a component attr (used for derived calcs)
-function getPredVal(region, attr, mktYear) {
-  if (!attr) return null;
-  const model = fitDirect(region, attr, mktYear);
+function getPredVal(region, attrDisplay, mktYear) {
+  if (!attrDisplay) return null;
+  const ra    = resolveAttr(attrDisplay);
+  const model = fitDirect(region, ra, mktYear);
   return model ? model.nextVal : null;
 }
 
-// Derived predictions
 function fitDerived(region, attrDisplay, mktYear) {
   const a = attrDisplay.trim();
+  const s = getSeries(region, resolveAttr(attrDisplay), mktYear)
+              .filter(d=>d.unitOk!==false);
+  const lastVal = s.length ? s[s.length-1].value : null;
 
-  // ── Supply Total = Beginning Stocks + Production + Imports ──
   if (/^supply.*(total|,\s*total)/i.test(a)) {
     const bs   = findAttrByPattern([/^beginning.stock/i]);
-    const prod = findAttrByPattern([/^production$/i]);
+    const prod = findAttrByPattern([/^production/i]);
     const imp  = findAttrByPattern([/^import/i]);
-    const vBS  = getPredVal(region, bs,   mktYear);
-    const vPr  = getPredVal(region, prod, mktYear);
-    const vIm  = getPredVal(region, imp,  mktYear);
-    if (vBS===null || vPr===null || vIm===null) return null;
-    const nextVal = Math.round((vBS + vPr + vIm)*100)/100;
-    // lastVal from actual data
-    const s = getSeries(region, resolveAttr(attrDisplay), mktYear);
-    const lastVal = s.length ? s[s.length-1].value : null;
-    return {nextVal, lastVal, method:'derived (BS+Prod+Imp)', isDerived: true};
+    const vBS=getPredVal(region,bs,mktYear);
+    const vPr=getPredVal(region,prod,mktYear);
+    const vIm=getPredVal(region,imp,mktYear);
+    if (vBS===null||vPr===null||vIm===null) return null;
+    return {nextVal:Math.round((vBS+vPr+vIm)*100)/100, lastVal,
+            method:'derived (BS+Prod+Imp)', isDerived:true};
   }
-
-  // ── Use Total = Domestic Use + Exports Total ─────────────────
   if (/^use.*(total|,\s*total)/i.test(a)) {
-    const du  = findAttrByPattern([/^domestic.use/i]);
-    const exp = findAttrByPattern([/^export.*(total|,\s*total)/i, /^export/i]);
-    const vDU = getPredVal(region, du,  mktYear);
-    const vEx = getPredVal(region, exp, mktYear);
-    if (vDU===null || vEx===null) return null;
-    const nextVal = Math.round((vDU + vEx)*100)/100;
-    const s = getSeries(region, resolveAttr(attrDisplay), mktYear);
-    const lastVal = s.length ? s[s.length-1].value : null;
-    return {nextVal, lastVal, method:'derived (DomUse+Exports)', isDerived: true};
+    // Collect all use components: crushing, domestic use, exports, seed, residual, biofuel, food+feed
+    const comps = display_attrs.filter(x => {
+      const t = x.trim();
+      return !isDerived(x) &&
+             (/^crushing/i.test(t) || /^domestic.use/i.test(t) ||
+              /^domestic.disappear/i.test(t) || /^export/i.test(t) ||
+              /^seed/i.test(t) || /^residual/i.test(t) ||
+              /^biofuel/i.test(t) || /^food.*feed/i.test(t));
+    });
+    let total=0, anyNull=false;
+    comps.forEach(c => {
+      const v=getPredVal(region,c,mktYear);
+      if (v===null) { anyNull=true; }
+      else total+=v;
+    });
+    if (anyNull && comps.length===0) return null;
+    return {nextVal:Math.round(total*100)/100, lastVal,
+            method:'derived (sum of use comps)', isDerived:true};
   }
-
-  // ── Ending Stocks = Supply Total - Use Total - Unaccounted ───
   if (/^ending.stock/i.test(a)) {
-    // Predict components first
-    const supplyAttr   = sorted_attrs.find(x => /^supply.*(total|,\s*total)/i.test(x));
-    const useAttr      = sorted_attrs.find(x => /^use.*(total|,\s*total)/i.test(x));
-    const unaccAttr    = findAttrByPattern([/^unaccounted/i]);
-
-    const supModel  = supplyAttr ? fitDerived(region, supplyAttr, mktYear) : null;
-    const useModel  = useAttr    ? fitDerived(region, useAttr,    mktYear) : null;
-    const vUnacc    = getPredVal(region, unaccAttr, mktYear) || 0;
-
-    if (!supModel || !useModel) return null;
-    const nextVal = Math.round((supModel.nextVal - useModel.nextVal - vUnacc)*100)/100;
-    const s = getSeries(region, resolveAttr(attrDisplay), mktYear);
-    const lastVal = s.length ? s[s.length-1].value : null;
-    return {nextVal, lastVal, method:'derived (Supply-Use-Unacc)', isDerived: true};
+    const supA = display_attrs.find(x=>/^supply.*(total|,\s*total)/i.test(x));
+    const useA = display_attrs.find(x=>/^use.*(total|,\s*total)/i.test(x));
+    const uncA = findAttrByPattern([/^unaccounted/i]);
+    const supM = supA ? fitDerived(region, supA, mktYear) : null;
+    const useM = useA ? fitDerived(region, useA, mktYear) : null;
+    const vUnc = uncA ? (getPredVal(region,uncA,mktYear)||0) : 0;
+    if (!supM||!useM) return null;
+    return {nextVal:Math.round((supM.nextVal-useM.nextVal-vUnc)*100)/100, lastVal,
+            method:'derived (Supply−Use−Unacc)', isDerived:true};
   }
-
   return null;
 }
 
@@ -537,7 +541,7 @@ function fitPrediction(region, attrDisplay, mktYear) {
     : fitDirect(region, resolveAttr(attrDisplay), mktYear);
 }
 
-// ── Build single balance sheet table ─────────────────────────
+// ── Build balance sheet table ─────────────────────────────────
 function buildTable(region) {
   if (!region)
     return '<div class="no-data">Region not available for this commodity</div>';
@@ -549,7 +553,7 @@ function buildTable(region) {
   const wLabels = {};
   last2W.forEach(wn => {
     for (const arr of Object.values(currentData.data)) {
-      const f = arr.find(d=>d.wasdeNum===wn);
+      const f=arr.find(d=>d.wasdeNum===wn);
       if (f) { wLabels[wn]=f.reportDate||('W'+wn); break; }
     }
   });
@@ -562,63 +566,71 @@ function buildTable(region) {
   h += '<th class="pg" rowspan="2" style="min-width:76px">Pred.<br>' +
        '<span style="font-weight:400;font-size:9px">'+NR_MONTH+'</span><br>' +
        '<span style="font-weight:400;font-size:9px">('+currentY+')</span></th></tr><tr>';
-  last3Y.forEach(() => {
-    last2W.forEach(wn => {
-      h += '<th style="font-size:10px;font-weight:400;color:#777">' +
-           (wLabels[wn]||'W'+wn)+'</th>';
-    });
-  });
+  last3Y.forEach(()=>last2W.forEach(wn=>{
+    h += '<th style="font-size:10px;font-weight:400;color:#777">'+(wLabels[wn]||'W'+wn)+'</th>';
+  }));
   h += '</tr></thead><tbody>';
 
-  let prevGroupKey = null;
+  let prevGroup = null;
 
-  sorted_attrs.forEach(attr => {
-    const ra         = resolveAttr(attr);
-    const canonical  = getCanonicalUnit(region, ra);
-    const derived    = isDerived(attr);
-    const groupKey   = attrSortKey(attr);
-    const sep        = prevGroupKey !== null && groupKey !== prevGroupKey ? ' sep' : '';
-    prevGroupKey     = groupKey;
+  display_attrs.forEach(attr => {
+    const ra      = resolveAttr(attr);
+    const grp     = attrGroup(attr);
+    const isES    = isEndingStocks(attr);
+    const isProd  = isProduction(attr);
+    const derived = isDerived(attr);
 
-    h += '<tr class="'+sep+'"><td class="an'+(derived?' derived':'')+'" title="'+attr+'">'+
-         attr+(derived?' *':'')+'</td>';
+    // Separator line between logical groups
+    const sepCls  = (prevGroup !== null && grp !== prevGroup) ? ' sep-top' : '';
+    prevGroup = grp;
+
+    // Row highlight class
+    const hlCls = isES ? ' hl-es' : isProd ? ' hl-prod' : '';
+
+    h += '<tr class="'+sepCls+hlCls+'">';
+    h += '<td class="an" title="'+attr+'">'+attr+(derived?' *':'')+'</td>';
 
     last3Y.forEach(yr => {
       const series = getSeries(region, ra, yr);
       const byW    = {};
-      series.forEach(d => { byW[d.wasdeNum]=d; });
+      series.forEach(d=>{ byW[d.wasdeNum]=d; });
 
       last2W.forEach((wn,wi) => {
-        const entry = byW[wn];
-        const val   = entry ? safeVal(entry, canonical) : null;
+        const entry    = byW[wn];
+        const {val, ok} = entryVal(entry);
         const prevEntry = wi>0 ? byW[last2W[wi-1]] : null;
-        const prev  = prevEntry ? safeVal(prevEntry, canonical) : null;
+        const {val:prev, ok:prevOk} = entryVal(prevEntry);
+
         let cell = val!==null ? fmtNum(val) : '—';
-        let chg  = '';
-        if (val!==null && prev!==null && prev!==0) {
-          const pct = ((val-prev)/Math.abs(prev))*100;
-          if (Math.abs(pct)>=0.05) {
+        // Show unit warning if conversion failed
+        if (!ok && val!==null) {
+          cell += '<span class="unit-warn" title="Unit mismatch — values may not be comparable">⚠</span>';
+        }
+
+        let chg = '';
+        // Only show % change if both values have valid units
+        if (val!==null && prev!==null && prev!==0 && ok && prevOk) {
+          const pct=((val-prev)/Math.abs(prev))*100;
+          if (Math.abs(pct)>=0.05 && Math.abs(pct)<500) {
             const cls=pct>0?'up':'dn', sign=pct>0?'+':'';
             chg='<br><span class="chg '+cls+'">'+sign+pct.toFixed(1)+'%</span>';
           }
         }
-        h += '<td'+(derived?' class="derived"':'')+'>'+cell+chg+'</td>';
+        h += '<td'+(!ok?' title="Unit mismatch"':'')+'>'+cell+chg+'</td>';
       });
     });
 
     // Prediction column
     const model = fitPrediction(region, attr, currentY);
-    if (model && model.nextVal !== null) {
-      const diff = model.nextVal - (model.lastVal||0);
-      const pct  = model.lastVal && model.lastVal!==0
-        ? (diff/Math.abs(model.lastVal))*100 : 0;
-      const cls  = diff>0?'up':diff<0?'dn':'';
-      const sign = diff>=0?'+':'';
-      const tdCls = derived ? 'pv-derived' : 'pv';
+    if (model && model.nextVal!==null) {
+      const diff=model.nextVal-(model.lastVal||0);
+      const pct=model.lastVal&&model.lastVal!==0?(diff/Math.abs(model.lastVal))*100:0;
+      const cls=diff>0?'up':diff<0?'dn':'';
+      const sign=diff>=0?'+':'';
+      const tdCls=derived?'pv-derived':'pv';
       h += '<td class="'+tdCls+'">'+fmtNum(model.nextVal)+
-           (Math.abs(pct)>=0.05
-            ? '<br><span class="chg '+cls+'">'+sign+pct.toFixed(1)+'%</span>'
-            : '')+'</td>';
+           (Math.abs(pct)>=0.05&&Math.abs(pct)<500
+            ?'<br><span class="chg '+cls+'">'+sign+pct.toFixed(1)+'%</span>':'')+'</td>';
     } else {
       h += '<td class="pv">—</td>';
     }
@@ -626,60 +638,62 @@ function buildTable(region) {
   });
 
   h += '</tbody></table></div>';
-  h += '<div class="legend-row">' +
-       '<div class="leg-item"><span class="leg-dot" style="background:#1e40af"></span>' +
-       '<span style="font-style:italic">* = derived (Supply−Use−Unacc)</span></div>' +
+  h += '<div class="tbl-legend">' +
+       '<div class="tll"><div class="tll-box" style="background:#fef9e7;border:1px solid #f5c518"></div>Ending Stocks</div>' +
+       '<div class="tll"><div class="tll-box" style="background:#e8f5e9;border:1px solid #81c784"></div>Production</div>' +
+       '<div class="tll"><span style="color:#1e40af;font-style:italic">* derived</span></div>' +
+       '<div class="tll"><span class="unit-warn">⚠</span> unit mismatch — value may be incorrect</div>' +
        '</div>';
   return h;
 }
 
 function renderAllTables() {
-  const worldR = findRegion(['world']);
-  const usR    = findRegion(['united states','u.s.','usa']);
-  document.getElementById('tbl-world').innerHTML = buildTable(worldR);
-  document.getElementById('tbl-us').innerHTML    = buildTable(usR);
+  const worldR=findRegion(['world']);
+  const usR=findRegion(['united states','u.s.','usa']);
+  document.getElementById('tbl-world').innerHTML=buildTable(worldR);
+  document.getElementById('tbl-us').innerHTML=buildTable(usR);
   renderCustomTable(1);
   renderCustomTable(2);
 }
 
 function renderCustomTable(n) {
   if (!currentData) return;
-  const region = document.getElementById('sel-custom'+n).value;
-  document.getElementById('tbl-custom'+n).innerHTML = buildTable(region);
+  const region=document.getElementById('sel-custom'+n).value;
+  document.getElementById('tbl-custom'+n).innerHTML=buildTable(region);
   renderCustomPrediction(n);
 }
 
-// ── World + US summary + prediction ──────────────────────────
+// ── Summary + prediction ──────────────────────────────────────
 function renderSummaryAndPrediction() {
-  const last2W   = getLastNWasdeNums(2);
-  const last3Y   = getLatestNMktYears(3);
-  const currentY = last3Y[last3Y.length-1];
-  const worldR   = findRegion(['world']);
-  const usR      = findRegion(['united states','u.s.','usa']);
+  const last2W=getLastNWasdeNums(2);
+  const last3Y=getLatestNMktYears(3);
+  const currentY=last3Y[last3Y.length-1];
+  const worldR=findRegion(['world']);
+  const usR=findRegion(['united states','u.s.','usa']);
 
-  if (last2W.length < 2) {
-    document.getElementById('summary-text').innerHTML = '<p>Need at least 2 releases.</p>';
-    document.getElementById('prediction-text').innerHTML = '<p>Need more data.</p>';
+  if (last2W.length<2) {
+    document.getElementById('summary-text').innerHTML='<p>Need at least 2 releases.</p>';
+    document.getElementById('prediction-text').innerHTML='<p>Need more data.</p>';
     return;
   }
-  const w1=last2W[0], w2=last2W[1];
+  const w1=last2W[0],w2=last2W[1];
 
-  const changes = [];
-  [worldR, usR].forEach(region => {
+  const changes=[];
+  [worldR,usR].forEach(region=>{
     if (!region) return;
-    sorted_attrs.forEach(attr => {
-      if (isDerived(attr)) return; // skip derived in summary
-      const ra  = resolveAttr(attr);
-      const can = getCanonicalUnit(region, ra);
-      const s   = getSeries(region, ra, currentY);
-      const pve = s.find(d=>d.wasdeNum===w1);
-      const cve = s.find(d=>d.wasdeNum===w2);
+    display_attrs.forEach(attr=>{
+      if (isDerived(attr)) return;
+      const ra=resolveAttr(attr);
+      const s=getSeries(region,ra,currentY);
+      const pve=s.find(d=>d.wasdeNum===w1);
+      const cve=s.find(d=>d.wasdeNum===w2);
       if (!pve||!cve) return;
-      const pv = safeVal(pve, can), cv = safeVal(cve, can);
-      if (pv===null||cv===null||pv===0) return;
-      const diff=cv-pv, pct=(diff/Math.abs(pv))*100;
-      if (Math.abs(pct)>=0.5)
-        changes.push({region,attr,prev:pv,curr:cv,diff,pct,unit:can||cve.unit||''});
+      if (pve.unitOk===false||cve.unitOk===false) return; // skip unit-bad rows
+      const pv=pve.value,cv=cve.value;
+      if (pv===0) return;
+      const diff=cv-pv,pct=(diff/Math.abs(pv))*100;
+      if (Math.abs(pct)>=0.5&&Math.abs(pct)<500)
+        changes.push({region,attr,prev:pv,curr:cv,diff,pct,unit:cve.unit||''});
     });
   });
   changes.sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct));
@@ -689,10 +703,10 @@ function renderSummaryAndPrediction() {
     sumH='<p>No significant changes (&ge;0.5%) for '+currentY+'.</p>';
   } else {
     const top=changes.slice(0,8);
-    const ups=top.filter(c=>c.diff>0).length, dns=top.filter(c=>c.diff<0).length;
+    const ups=top.filter(c=>c.diff>0).length,dns=top.filter(c=>c.diff<0).length;
     sumH='<p style="font-size:12px;color:#555;margin-bottom:.5rem">'+currentY+
          ': <strong>'+ups+'</strong> up, <strong>'+dns+'</strong> down.</p><ul>';
-    top.forEach(c => {
+    top.forEach(c=>{
       const tag=c.diff>0
         ?'<span class="tag-up">+'+c.pct.toFixed(1)+'%</span>'
         :'<span class="tag-dn">'+c.pct.toFixed(1)+'%</span>';
@@ -700,27 +714,24 @@ function renderSummaryAndPrediction() {
             fmtNum(c.prev)+' → '+fmtNum(c.curr)+' '+c.unit+'</li>';
     });
     sumH+='</ul>';
-    if (changes.length>8)
-      sumH+='<p style="font-size:11px;color:#888;margin-top:.3rem">+'+(changes.length-8)+' more</p>';
+    if (changes.length>8) sumH+='<p style="font-size:11px;color:#888;margin-top:.3rem">+'+(changes.length-8)+' more</p>';
   }
-  document.getElementById('summary-text').innerHTML = sumH;
+  document.getElementById('summary-text').innerHTML=sumH;
 
-  // Prediction (include derived, clearly labelled)
   const bigMoves=[];
-  [worldR, usR].forEach(region => {
+  [worldR,usR].forEach(region=>{
     if (!region) return;
-    sorted_attrs.forEach(attr => {
-      const model = fitPrediction(region, attr, currentY);
+    display_attrs.forEach(attr=>{
+      const model=fitPrediction(region,attr,currentY);
       if (!model||model.nextVal===null||model.lastVal===null) return;
-      const pct = model.lastVal!==0
-        ?((model.nextVal-model.lastVal)/Math.abs(model.lastVal))*100:0;
-      if (Math.abs(pct)>=0.5) {
-        const ra = resolveAttr(attr);
-        const s  = getSeries(region, ra, currentY);
-        bigMoves.push({region, attr, lastVal:model.lastVal,
-                       nextVal:model.nextVal, pct, method:model.method,
-                       isDerived:model.isDerived,
-                       unit:getCanonicalUnit(region,ra)||(s[s.length-1]?.unit||'')});
+      const pct=model.lastVal!==0?((model.nextVal-model.lastVal)/Math.abs(model.lastVal))*100:0;
+      if (Math.abs(pct)>=0.5&&Math.abs(pct)<500) {
+        const ra=resolveAttr(attr);
+        const s=getSeries(region,ra,currentY);
+        const unit=getCanonUnit(region,ra)||(s[s.length-1]?.unit||'');
+        bigMoves.push({region,attr,lastVal:model.lastVal,
+                       nextVal:model.nextVal,pct,method:model.method,
+                       isDerived:model.isDerived,unit});
       }
     });
   });
@@ -731,7 +742,7 @@ function renderSummaryAndPrediction() {
     predH='<p>Minimal changes expected for '+currentY+'.</p>';
   } else {
     predH='<ul>';
-    bigMoves.slice(0,9).forEach(m => {
+    bigMoves.slice(0,9).forEach(m=>{
       const sign=m.pct>=0?'+':'';
       const tag=m.pct>0
         ?'<span class="tag-up">'+sign+m.pct.toFixed(1)+'%</span>'
@@ -742,31 +753,28 @@ function renderSummaryAndPrediction() {
              ' <span style="font-size:10px;color:#aaa">('+m.method+')</span></li>';
     });
     predH+='</ul><p class="model-note">Non-derived: blended regression+6yr history. ' +
-           'Derived: Supply=BS+Prod+Imp; Use=DomUse+Exports; EndStocks=Supply−Use−Unacc. ' +
+           'Derived: Supply=BS+Prod+Imp; Use=sum of use components; EndStocks=Supply−Use−Unacc. ' +
            NR_MONTH+' release. Directional only.</p>';
   }
-  document.getElementById('prediction-text').innerHTML = predH;
+  document.getElementById('prediction-text').innerHTML=predH;
 }
 
-// ── Custom region prediction panels ──────────────────────────
 function buildPredictionPanel(region) {
   if (!region) return '<div class="no-data">No region selected</div>';
-  const last3Y   = getLatestNMktYears(3);
-  const currentY = last3Y[last3Y.length-1];
+  const last3Y=getLatestNMktYears(3);
+  const currentY=last3Y[last3Y.length-1];
 
   const bigMoves=[];
-  sorted_attrs.forEach(attr => {
-    const model = fitPrediction(region, attr, currentY);
+  display_attrs.forEach(attr=>{
+    const model=fitPrediction(region,attr,currentY);
     if (!model||model.nextVal===null||model.lastVal===null) return;
-    const pct = model.lastVal!==0
-      ?((model.nextVal-model.lastVal)/Math.abs(model.lastVal))*100:0;
-    if (Math.abs(pct)>=0.5) {
+    const pct=model.lastVal!==0?((model.nextVal-model.lastVal)/Math.abs(model.lastVal))*100:0;
+    if (Math.abs(pct)>=0.5&&Math.abs(pct)<500) {
       const ra=resolveAttr(attr);
-      const s=getSeries(region, ra, currentY);
-      bigMoves.push({attr, lastVal:model.lastVal,
-                     nextVal:model.nextVal, pct, method:model.method,
-                     isDerived:model.isDerived,
-                     unit:getCanonicalUnit(region,ra)||(s[s.length-1]?.unit||'')});
+      const s=getSeries(region,ra,currentY);
+      bigMoves.push({attr,lastVal:model.lastVal,nextVal:model.nextVal,
+                     pct,method:model.method,isDerived:model.isDerived,
+                     unit:getCanonUnit(region,ra)||(s[s.length-1]?.unit||'')});
     }
   });
   bigMoves.sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct));
@@ -775,7 +783,7 @@ function buildPredictionPanel(region) {
     return '<p style="font-size:12px;color:#888">Minimal changes expected for '+currentY+'.</p>';
 
   let h='<ul style="padding-left:1rem;list-style:disc">';
-  bigMoves.slice(0,6).forEach(m => {
+  bigMoves.slice(0,6).forEach(m=>{
     const sign=m.pct>=0?'+':'';
     const tag=m.pct>0
       ?'<span class="tag-up">'+sign+m.pct.toFixed(1)+'%</span>'
@@ -789,28 +797,25 @@ function buildPredictionPanel(region) {
   return h;
 }
 
-function renderCustomPredictions() {
-  renderCustomPrediction(1);
-  renderCustomPrediction(2);
-}
+function renderCustomPredictions() { renderCustomPrediction(1); renderCustomPrediction(2); }
 
 function renderCustomPrediction(n) {
   if (!currentData) return;
-  const region = document.getElementById('sel-custom'+n).value;
-  document.getElementById('cpred'+n+'-title').textContent =
+  const region=document.getElementById('sel-custom'+n).value;
+  document.getElementById('cpred'+n+'-title').textContent=
     (region||'Custom Region '+n)+' — Next Release Prediction';
-  document.getElementById('cpred'+n).innerHTML = buildPredictionPanel(region);
+  document.getElementById('cpred'+n).innerHTML=buildPredictionPanel(region);
 }
 
 // ── Chart ─────────────────────────────────────────────────────
 function buildPills(years) {
-  document.getElementById('mkt-pills').innerHTML = years.map(y =>
+  document.getElementById('mkt-pills').innerHTML=years.map(y=>
     '<button class="pill '+(activeYears.has(y)?'active':'')+
     '" onclick="toggleYear(\''+y+'\',this)">'+y+'</button>'
   ).join('');
 }
 
-function toggleYear(year, el) {
+function toggleYear(year,el) {
   if (activeYears.has(year)) {
     if (activeYears.size===1) return;
     activeYears.delete(year); el.classList.remove('active');
@@ -822,47 +827,42 @@ function toggleYear(year, el) {
 
 function renderChart() {
   if (!currentData) return;
-  const region = document.getElementById('sel-region').value;
-  const attr   = document.getElementById('sel-attribute').value;
-  const ra     = resolveAttr(attr);
-  const can    = getCanonicalUnit(region, ra);
-  const sets   = [];
-  let maxRel=0, unit=can||'';
+  const region=document.getElementById('sel-region').value;
+  const attr=document.getElementById('sel-attribute').value;
+  const ra=resolveAttr(attr);
+  const can=getCanonUnit(region,ra);
+  const sets=[]; let maxRel=0,unit=can||'';
 
-  [...activeYears].sort().forEach((mktYear,i) => {
-    const series = getSeries(region, ra, mktYear);
+  [...activeYears].sort().forEach((mktYear,i)=>{
+    // Only use valid-unit entries for chart
+    const series=getSeries(region,ra,mktYear).filter(d=>d.unitOk!==false);
     if (!series.length) return;
-    if (!unit && series[0].unit) unit=series[0].unit;
-    maxRel = Math.max(maxRel, series.length);
+    if (!unit&&series[0].unit) unit=series[0].unit;
+    maxRel=Math.max(maxRel,series.length);
     sets.push({
-      label: mktYear,
-      data: series.map(p=>({
-        x:p.releaseNum,
-        y:safeVal(p,can),
-        reportDate:p.reportDate,
-        wasdeNum:p.wasdeNum
-      })),
-      borderColor: COLORS[i%COLORS.length],
-      backgroundColor: COLORS[i%COLORS.length]+'18',
-      borderWidth:2, pointRadius:3, pointHoverRadius:6, tension:0.3, fill:false
+      label:mktYear,
+      data:series.map(p=>({x:p.releaseNum,y:p.value,
+                            reportDate:p.reportDate,wasdeNum:p.wasdeNum})),
+      borderColor:COLORS[i%COLORS.length],
+      backgroundColor:COLORS[i%COLORS.length]+'18',
+      borderWidth:2,pointRadius:3,pointHoverRadius:6,tension:0.3,fill:false
     });
   });
 
   if (chart) chart.destroy();
   if (!sets.length) return;
-  const labels = Array.from({length:maxRel},(_,i)=>'Release '+(i+1));
-  chart = new Chart(document.getElementById('myChart'),{
-    type:'line', data:{labels, datasets:sets},
+  const labels=Array.from({length:maxRel},(_,i)=>'Release '+(i+1));
+  chart=new Chart(document.getElementById('myChart'),{
+    type:'line',data:{labels,datasets:sets},
     options:{
-      responsive:true, maintainAspectRatio:false,
+      responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       plugins:{
         legend:{position:'top',labels:{font:{size:11},boxWidth:12}},
         tooltip:{callbacks:{
-          title: ctx=>'Release '+(ctx[0].parsed.x+1),
-          afterBody: ctx=>'WASDE #'+ctx[0].raw.wasdeNum+'  —  '+ctx[0].raw.reportDate,
-          label: ctx=>' '+ctx.dataset.label+': '+
-                 (ctx.parsed.y!==null?ctx.parsed.y.toLocaleString():'—')+' '+unit
+          title:ctx=>'Release '+(ctx[0].parsed.x+1),
+          afterBody:ctx=>'WASDE #'+ctx[0].raw.wasdeNum+'  —  '+ctx[0].raw.reportDate,
+          label:ctx=>' '+ctx.dataset.label+': '+ctx.parsed.y.toLocaleString()+' '+unit
         }}
       },
       scales:{
