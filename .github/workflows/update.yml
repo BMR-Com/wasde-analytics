@@ -23,11 +23,39 @@ jobs:
       - name: Install dependencies
         run: pip install pandas curl_cffi python-dateutil -q
 
+      - name: Check release assets
+        env:
+          GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          echo "=== Checking what files exist in the data-store release ==="
+          curl -s \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/data-store" \
+            | python3 -c "
+          import json,sys
+          r = json.load(sys.stdin)
+          print('Release name:', r.get('name'))
+          print('Release tag:', r.get('tag_name'))
+          assets = r.get('assets', [])
+          print(f'Assets found: {len(assets)}')
+          for a in assets:
+              print(f'  - name: [{a[\"name\"]}]  size: {a[\"size\"]} bytes  id: {a[\"id\"]}')
+          "
+
       - name: Run pipeline
         env:
           GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: python process.py json-from-release
+
+      - name: Show generated files
+        run: |
+          echo "=== Files in data/ folder ==="
+          ls -la data/ 2>/dev/null && echo "data/ exists" || echo "data/ folder is EMPTY or missing"
+          echo "=== Current directory files ==="
+          ls -la
 
       - name: Commit & push updated JSONs
         run: |
@@ -35,7 +63,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
           if git diff --staged --quiet; then
-            echo "No changes to commit"
+            echo "No changes to commit — data/ may be empty"
           else
             git commit -m "data: WASDE update $(date +'%Y-%m')"
             git push
