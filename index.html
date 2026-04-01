@@ -11,50 +11,60 @@ body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;min-heigh
 header{background:#1a2e1a;color:#fff;padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
 header h1{font-size:1.1rem;font-weight:500}
 .hright{font-size:11px;opacity:.7;text-align:right;line-height:1.7}
-.controls{display:flex;gap:16px;padding:1rem 2rem;background:#fff;border-bottom:1px solid #e5e5e0;flex-wrap:wrap;align-items:flex-end}
+.nrbar{background:#fffbf0;border-bottom:1px solid #e8d8a0;padding:.5rem 2rem;font-size:12px;color:#7a5000;display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center}
+.nrb-lbl{font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.top-controls{display:flex;gap:16px;padding:1rem 2rem;background:#fff;border-bottom:1px solid #e5e5e0;flex-wrap:wrap;align-items:flex-end}
 .ctrl label{display:block;font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-select{padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff;min-width:200px;cursor:pointer}
-.next-release-bar{background:#fffbf0;border-bottom:1px solid #e8d8a0;padding:.5rem 2rem;font-size:12px;color:#7a5000;display:flex;gap:1.5rem;flex-wrap:wrap}
-.nrb-item{display:flex;gap:6px;align-items:center}
-.nrb-label{font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
-.section{padding:1.5rem 2rem;max-width:1400px;margin:0 auto}
-.section-title{font-size:12px;font-weight:600;color:#1a2e1a;margin-bottom:1rem;text-transform:uppercase;letter-spacing:.08em;border-left:3px solid #1a2e1a;padding-left:.6rem}
-.tables-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
-@media(max-width:960px){.tables-wrap{grid-template-columns:1fr}}
-.table-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;overflow:hidden}
-.table-card-title{background:#1a2e1a;color:#fff;padding:.55rem 1rem;font-size:12px;font-weight:500;letter-spacing:.04em}
+select{padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff;cursor:pointer}
+select.wide{min-width:200px}
+.section{padding:1.5rem 2rem;max-width:1500px;margin:0 auto}
+.sec-title{font-size:12px;font-weight:600;color:#1a2e1a;margin-bottom:1rem;text-transform:uppercase;letter-spacing:.08em;border-left:3px solid #1a2e1a;padding-left:.6rem}
+/* 4-column grid for tables */
+.tables-wrap{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1rem;margin-bottom:1.25rem}
+@media(max-width:1200px){.tables-wrap{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.tables-wrap{grid-template-columns:1fr}}
+.table-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;overflow:hidden;min-width:0}
+.tc-head{background:#1a2e1a;color:#fff;padding:.5rem 1rem;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
+.tc-head select{background:#2a4a2a;color:#fff;border:1px solid #3a6a3a;border-radius:5px;padding:3px 6px;font-size:11px;cursor:pointer;max-width:160px}
+.tc-head select option{background:#1a2e1a}
 .tbl-scroll{overflow-x:auto}
-table.bs{width:100%;border-collapse:collapse;font-size:11.5px}
-table.bs th{background:#f5f5f3;padding:5px 7px;text-align:center;font-weight:500;color:#555;border-bottom:1px solid #e5e5e0;white-space:nowrap}
-table.bs th.ac{text-align:left;min-width:150px}
-table.bs th.yg{background:#edf2ed;color:#1a2e1a;font-size:11px;border-bottom:1px solid #c8d8c8}
-table.bs th.pg{background:#fff8e6;color:#7a5000;font-size:11px;border-bottom:1px solid #e8d8a0}
-table.bs td{padding:4px 7px;border-bottom:1px solid #f0f0ee;text-align:right;white-space:nowrap}
-table.bs td.an{text-align:left;color:#333;font-size:11px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+table.bs{width:100%;border-collapse:collapse;font-size:11px}
+table.bs th{background:#f5f5f3;padding:5px 6px;text-align:center;font-weight:500;color:#555;border-bottom:1px solid #e5e5e0;white-space:nowrap}
+table.bs th.ac{text-align:left;min-width:130px;max-width:160px}
+table.bs th.yg{background:#edf2ed;color:#1a2e1a;font-size:10px;border-bottom:1px solid #c8d8c8}
+table.bs th.pg{background:#fff8e6;color:#7a5000;font-size:10px;border-bottom:1px solid #e8d8a0}
+table.bs td{padding:3px 6px;border-bottom:1px solid #f0f0ee;text-align:right;white-space:nowrap;font-size:11px}
+table.bs td.an{text-align:left;color:#333;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 table.bs tr:last-child td{border-bottom:none}
 table.bs tr:hover td{background:#fafaf8}
 .up{color:#166534}.dn{color:#991b1b}
-.chg{font-size:9.5px}
+.chg{font-size:9px}
 .pv{background:#fffbf0;color:#7a5000;font-weight:500}
 .summary-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:1.25rem;margin-bottom:1.25rem}
 .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:.75rem}
 @media(max-width:700px){.summary-grid{grid-template-columns:1fr}}
 .sb h4{font-size:11px;font-weight:600;color:#1a2e1a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;border-bottom:1px solid #e5e5e0;padding-bottom:.4rem}
 .sb ul{padding-left:1rem;list-style:disc}
-.sb li{font-size:12px;line-height:1.8;color:#333;margin-bottom:1px}
+.sb li{font-size:12px;line-height:1.8;color:#333}
 .sb p{font-size:12px;line-height:1.7;color:#444}
 .tag-up{display:inline-block;background:#dcfce7;color:#166534;border-radius:3px;padding:0 5px;font-size:10px;font-weight:600;margin-right:2px}
 .tag-dn{display:inline-block;background:#fee2e2;color:#991b1b;border-radius:3px;padding:0 5px;font-size:10px;font-weight:600;margin-right:2px}
-.model-note{font-size:10px;color:#aaa;margin-top:.75rem;line-height:1.6}
+.model-note{font-size:10px;color:#aaa;margin-top:.6rem;line-height:1.6}
+/* Custom region prediction cards below custom tables */
+.custom-pred-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem}
+@media(max-width:1200px){.custom-pred-wrap{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.custom-pred-wrap{grid-template-columns:1fr}}
+.pred-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:1rem}
+.pred-card h5{font-size:11px;font-weight:600;color:#1a2e1a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;border-bottom:1px solid #e5e5e0;padding-bottom:.4rem}
 .chart-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
 .chart-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:1rem}
-.chart-controls select{min-width:160px}
-.pills-label{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.pills-lbl{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
 .pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
 .pill{padding:3px 10px;border-radius:99px;font-size:11px;cursor:pointer;border:1px solid #ccc;background:#fff;transition:all .12s}
 .pill.active{background:#1a2e1a;color:#fff;border-color:#1a2e1a}
 #chart-container{position:relative;height:380px}
-.spinner{text-align:center;padding:2.5rem;color:#aaa;font-size:13px}
+.spinner{text-align:center;padding:2rem;color:#aaa;font-size:12px}
+.no-data{text-align:center;padding:1.5rem;color:#bbb;font-size:11px}
 </style>
 </head>
 <body>
@@ -63,43 +73,69 @@ table.bs tr:hover td{background:#fafaf8}
   <h1>WASDE Analytics Dashboard</h1>
   <div class="hright">
     <div id="last-updated"></div>
-    <div id="latest-release-label"></div>
   </div>
 </header>
 
-<div class="next-release-bar">
-  <div class="nrb-item"><span class="nrb-label">Next WASDE release:</span> <span id="next-release-date">—</span></div>
-  <div class="nrb-item"><span class="nrb-label">Days away:</span> <span id="days-away">—</span></div>
-  <div class="nrb-item"><span class="nrb-label">Time (ET):</span> <span>12:00 PM EST</span></div>
-  <div class="nrb-item" style="margin-left:auto;font-size:11px;opacity:.7">Predictions below are for that release</div>
+<div class="nrbar">
+  <div><span class="nrb-lbl">Next WASDE release:</span> <span id="next-release-date">—</span></div>
+  <div><span class="nrb-lbl">Days away:</span> <span id="days-away">—</span></div>
+  <div><span class="nrb-lbl">Time (ET):</span> 12:00 PM EST</div>
+  <div style="margin-left:auto;font-size:11px;opacity:.7">Predictions below are for that release</div>
 </div>
 
-<div class="controls">
+<div class="top-controls">
   <div class="ctrl">
     <label>Commodity</label>
-    <select id="sel-commodity" onchange="onCommodityChange()"><option>Loading...</option></select>
+    <select id="sel-commodity" class="wide" onchange="onCommodityChange()">
+      <option>Loading...</option>
+    </select>
   </div>
-  <div style="font-size:12px;color:#888;align-self:center;padding-top:14px">
+  <div style="font-size:12px;color:#888;padding-top:14px">
     All sections update when commodity changes
   </div>
 </div>
 
 <div class="section">
 
-  <div class="section-title">Balance Sheet — Last 2 Releases &times; 3 Latest Marketing Years</div>
+  <!-- ── 4 Balance sheet tables ── -->
+  <div class="sec-title">Balance Sheet — Last 2 Releases &times; 3 Latest Marketing Years</div>
   <div class="tables-wrap">
+
+    <!-- Fixed: World -->
     <div class="table-card">
-      <div class="table-card-title">World</div>
-      <div id="world-table"><div class="spinner">Loading...</div></div>
+      <div class="tc-head"><span>World</span></div>
+      <div id="tbl-world"><div class="spinner">Loading...</div></div>
     </div>
+
+    <!-- Fixed: United States -->
     <div class="table-card">
-      <div class="table-card-title">United States</div>
-      <div id="us-table"><div class="spinner">Loading...</div></div>
+      <div class="tc-head"><span>United States</span></div>
+      <div id="tbl-us"><div class="spinner">Loading...</div></div>
     </div>
+
+    <!-- Custom region 1 -->
+    <div class="table-card">
+      <div class="tc-head">
+        <span>Custom Region 1</span>
+        <select id="sel-custom1" onchange="renderCustomTable(1)"></select>
+      </div>
+      <div id="tbl-custom1"><div class="spinner">Loading...</div></div>
+    </div>
+
+    <!-- Custom region 2 -->
+    <div class="table-card">
+      <div class="tc-head">
+        <span>Custom Region 2</span>
+        <select id="sel-custom2" onchange="renderCustomTable(2)"></select>
+      </div>
+      <div id="tbl-custom2"><div class="spinner">Loading...</div></div>
+    </div>
+
   </div>
 
+  <!-- ── World + US summary/prediction ── -->
   <div class="summary-card">
-    <div class="section-title" style="margin-bottom:0">Analysis &amp; Prediction</div>
+    <div class="sec-title" style="margin-bottom:0">Analysis &amp; Prediction — World &amp; United States</div>
     <div class="summary-grid">
       <div class="sb">
         <h4>Key changes — last 2 reports</h4>
@@ -112,8 +148,22 @@ table.bs tr:hover td{background:#fafaf8}
     </div>
   </div>
 
+  <!-- ── Custom region predictions ── -->
+  <div class="sec-title">Prediction — Custom Regions</div>
+  <div class="custom-pred-wrap">
+    <div class="pred-card">
+      <h5 id="cpred1-title">Custom Region 1 — Next Release Prediction</h5>
+      <div id="cpred1"><div class="spinner">Loading...</div></div>
+    </div>
+    <div class="pred-card">
+      <h5 id="cpred2-title">Custom Region 2 — Next Release Prediction</h5>
+      <div id="cpred2"><div class="spinner">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- ── Forecast evolution chart ── -->
   <div class="chart-card">
-    <div class="section-title">Forecast Evolution Chart</div>
+    <div class="sec-title">Forecast Evolution Chart</div>
     <div class="chart-controls">
       <div class="ctrl">
         <label>Region</label>
@@ -124,7 +174,7 @@ table.bs tr:hover td{background:#fafaf8}
         <select id="sel-attribute" onchange="renderChart()"></select>
       </div>
     </div>
-    <div class="pills-label">Marketing Years (toggle to compare)</div>
+    <div class="pills-lbl">Marketing Years (toggle to compare)</div>
     <div class="pills" id="mkt-pills"></div>
     <div id="chart-container"><canvas id="myChart"></canvas></div>
   </div>
@@ -137,7 +187,6 @@ const COLORS = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed',
                 '#0891b2','#be185d','#65a30d','#ea580c','#6d28d9',
                 '#0d9488','#b45309','#1d4ed8','#15803d','#c2410c'];
 
-// 2026 WASDE release dates (12pm ET = 17:00 UTC)
 const WASDE_2026 = [
   '2026-01-12','2026-02-10','2026-03-10','2026-04-09',
   '2026-05-12','2026-06-11','2026-07-10','2026-08-12',
@@ -149,25 +198,25 @@ function getNextReleaseInfo() {
   for (const ds of WASDE_2026) {
     const d = new Date(ds + 'T17:00:00Z');
     if (d > now) {
-      const days  = Math.ceil((d - now) / 86400000);
-      const label = d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-      const month = d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
-      return {label, days, month};
+      return {
+        label: d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
+        days:  Math.ceil((d - now)/86400000),
+        month: d.toLocaleDateString('en-US',{month:'long',year:'numeric'})
+      };
     }
   }
-  // Beyond 2026: estimate 10th of next month
   const nm = new Date(now.getFullYear(), now.getMonth()+1, 10, 17, 0, 0);
   return {
     label: nm.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
-    days:  Math.ceil((nm - now) / 86400000),
+    days:  Math.ceil((nm - now)/86400000),
     month: nm.toLocaleDateString('en-US',{month:'long',year:'numeric'})
   };
 }
 
-let manifest=null, currentData=null, chart=null, activeYears=new Set();
-let deduped_attrs=[];
-let NR_MONTH = '';
+let manifest=null, currentData=null, chart=null;
+let activeYears=new Set(), deduped_attrs=[], NR_MONTH='';
 
+// ── Boot ──────────────────────────────────────────────────────
 async function boot() {
   const nri = getNextReleaseInfo();
   NR_MONTH  = nri.month;
@@ -183,38 +232,65 @@ async function boot() {
       'Data updated: ' + manifest.lastUpdated;
     const sel = document.getElementById('sel-commodity');
     sel.innerHTML = manifest.commodities
-      .map(c => '<option value="' + c.file + '">' + c.commodity + '</option>').join('');
+      .map(c => '<option value="'+c.file+'">'+c.commodity+'</option>').join('');
     await onCommodityChange();
   } catch(e) {
-    document.getElementById('world-table').innerHTML =
-      '<div class="spinner" style="color:#c00">Error loading data: ' + e.message + '<br>Make sure you are running from a web server (not file://)</div>';
+    ['tbl-world','tbl-us','tbl-custom1','tbl-custom2'].forEach(id => {
+      document.getElementById(id).innerHTML =
+        '<div class="spinner" style="color:#c00">Error: '+e.message+'</div>';
+    });
   }
 }
 
 async function onCommodityChange() {
-  setAllLoading();
+  setLoading();
   const file = document.getElementById('sel-commodity').value;
   const res  = await fetch(BASE + '/' + file);
   currentData = await res.json();
 
   deduped_attrs = dedupeAttributes(currentData.attributes);
 
+  // Populate region dropdowns (chart + custom selects)
+  const regions = currentData.regions;
   const rSel = document.getElementById('sel-region');
-  rSel.innerHTML = currentData.regions
-    .map(r => '<option>' + r + '</option>').join('');
+  rSel.innerHTML = regions.map(r => '<option>'+r+'</option>').join('');
+
+  // Custom region selects — default to 3rd and 4th region (non World/US)
+  const worldR = findRegion(['world']);
+  const usR    = findRegion(['united states','u.s.','usa']);
+  const others = regions.filter(r => r !== worldR && r !== usR);
+
+  ['sel-custom1','sel-custom2'].forEach((sid, i) => {
+    const s = document.getElementById(sid);
+    s.innerHTML = regions.map(r => '<option>'+r+'</option>').join('');
+    // Default to different regions
+    const def = others[i] || regions[i] || regions[0];
+    s.value = def;
+  });
+
+  // Chart attribute select
   const aSel = document.getElementById('sel-attribute');
-  aSel.innerHTML = deduped_attrs.map(a => '<option>' + a + '</option>').join('');
+  aSel.innerHTML = deduped_attrs.map(a => '<option>'+a+'</option>').join('');
   const esIdx = deduped_attrs.findIndex(a => a.toLowerCase().includes('ending'));
   if (esIdx >= 0) aSel.selectedIndex = esIdx;
 
   activeYears = new Set(currentData.marketYears.slice(-5));
   buildPills(currentData.marketYears);
-  renderBalanceSheets();
+
+  renderAllTables();
   renderSummaryAndPrediction();
+  renderCustomPredictions();
   renderChart();
 }
 
-// Deduplicate: case + whitespace insensitive, prefer Title Case
+function setLoading() {
+  ['tbl-world','tbl-us','tbl-custom1','tbl-custom2',
+   'summary-text','prediction-text','cpred1','cpred2'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="spinner">Loading...</div>';
+  });
+}
+
+// ── Attribute deduplication ───────────────────────────────────
 function dedupeAttributes(attrs) {
   const seen = new Map();
   attrs.forEach(a => {
@@ -223,15 +299,13 @@ function dedupeAttributes(attrs) {
       seen.set(norm, a);
     } else {
       const ex = seen.get(norm);
-      if (a[0] === a[0].toUpperCase() && ex[0] !== ex[0].toUpperCase()) {
+      if (a[0] === a[0].toUpperCase() && ex[0] !== ex[0].toUpperCase())
         seen.set(norm, a);
-      }
     }
   });
   return [...seen.values()];
 }
 
-// Find actual key in data matching attr (case-insensitive)
 function resolveAttr(attr) {
   const norm = attr.trim().toLowerCase().replace(/\s+/g,' ');
   return currentData.attributes.find(
@@ -239,18 +313,7 @@ function resolveAttr(attr) {
   ) || attr;
 }
 
-function setAllLoading() {
-  ['world-table','us-table','summary-text','prediction-text'].forEach(id => {
-    document.getElementById(id).innerHTML = '<div class="spinner">Loading...</div>';
-  });
-}
-
-function fmtNum(v) {
-  if (v===null||v===undefined) return '—';
-  const n = parseFloat(v);
-  return isNaN(n) ? '—' : n.toLocaleString(undefined,{maximumFractionDigits:2});
-}
-
+// ── Data helpers ──────────────────────────────────────────────
 function getSeries(region, attr, mktYear) {
   const key = region + '||' + attr + '||' + mktYear;
   if (currentData.data[key])
@@ -261,6 +324,15 @@ function getSeries(region, attr, mktYear) {
   return found
     ? currentData.data[found].sort((a,b) => a.releaseNum - b.releaseNum)
     : [];
+}
+
+function getUnitForAttr(region, attr) {
+  if (!currentData.unitMap) return '';
+  const key  = region + '||' + attr;
+  const norm = key.toLowerCase().replace(/\s+/g,' ');
+  const found = Object.keys(currentData.unitMap).find(
+    k => k.toLowerCase().replace(/\s+/g,' ') === norm);
+  return found ? currentData.unitMap[found] : '';
 }
 
 function findRegion(kws) {
@@ -280,6 +352,13 @@ function getLatestNMktYears(n) {
   return [...currentData.marketYears].sort().slice(-n);
 }
 
+function fmtNum(v) {
+  if (v===null||v===undefined) return '—';
+  const n = parseFloat(v);
+  return isNaN(n) ? '—' : n.toLocaleString(undefined,{maximumFractionDigits:2});
+}
+
+// ── Prediction model ──────────────────────────────────────────
 function linReg(xs, ys) {
   const n=xs.length; if(n<2) return null;
   const mx=xs.reduce((a,b)=>a+b,0)/n, my=ys.reduce((a,b)=>a+b,0)/n;
@@ -290,7 +369,6 @@ function linReg(xs, ys) {
   return {predict: x=>a+b*x};
 }
 
-// Always predicts release N+1 (next month after latest available)
 function fitPrediction(region, attr, mktYear) {
   const series = getSeries(region, attr, mktYear);
   if (series.length < 2) return null;
@@ -312,17 +390,19 @@ function fitPrediction(region, attr, mktYear) {
     if (atN && atN1) moms.push(atN1.value - atN.value);
   });
 
-  let nextVal = regPred, method = 'linear regression';
+  let nextVal=regPred, method='linear regression';
   if (moms.length >= 2) {
     const avgMom = moms.reduce((a,b)=>a+b,0)/moms.length;
     nextVal = 0.5*regPred + 0.5*(lastVal+avgMom);
-    method  = 'blended (' + moms.length + 'yr history)';
+    method  = 'blended ('+moms.length+'yr history)';
   }
   return {nextVal: Math.round(nextVal*100)/100, lastVal, nextX, method};
 }
 
-function buildBalanceSheet(region) {
-  if (!region) return '<div class="spinner" style="color:#c00">Region not found in data</div>';
+// ── Build single balance sheet table ─────────────────────────
+function buildTable(region) {
+  if (!region) return '<div class="no-data">Region not available for this commodity</div>';
+
   const last2W   = getLastNWasdeNums(2);
   const last3Y   = getLatestNMktYears(3);
   const currentY = last3Y[last3Y.length-1];
@@ -331,7 +411,7 @@ function buildBalanceSheet(region) {
   last2W.forEach(wn => {
     for (const arr of Object.values(currentData.data)) {
       const f = arr.find(d=>d.wasdeNum===wn);
-      if (f) { wLabels[wn] = f.reportDate||('W'+wn); break; }
+      if (f) { wLabels[wn]=f.reportDate||('W'+wn); break; }
     }
   });
 
@@ -340,12 +420,12 @@ function buildBalanceSheet(region) {
   last3Y.forEach(yr => {
     h += '<th class="yg" colspan="'+last2W.length+'">'+yr+'</th>';
   });
-  h += '<th class="pg" rowspan="2" style="min-width:82px">Prediction<br>' +
-       '<span style="font-weight:400;font-size:10px">'+NR_MONTH+'</span><br>' +
-       '<span style="font-weight:400;font-size:10px">('+currentY+')</span></th></tr><tr>';
+  h += '<th class="pg" rowspan="2" style="min-width:72px">Pred.<br>' +
+       '<span style="font-weight:400;font-size:9px">'+NR_MONTH+'</span><br>' +
+       '<span style="font-weight:400;font-size:9px">('+currentY+')</span></th></tr><tr>';
   last3Y.forEach(() => {
     last2W.forEach(wn => {
-      h += '<th style="font-size:10px;font-weight:400;color:#777">' +
+      h += '<th style="font-size:9px;font-weight:400;color:#777">' +
            (wLabels[wn]||'W'+wn) + '</th>';
     });
   });
@@ -358,7 +438,7 @@ function buildBalanceSheet(region) {
       const series = getSeries(region, ra, yr);
       const byW    = {};
       series.forEach(d => { byW[d.wasdeNum]=d; });
-      last2W.forEach((wn, wi) => {
+      last2W.forEach((wn,wi) => {
         const entry = byW[wn];
         const val   = entry ? entry.value : null;
         const prev  = wi>0 && byW[last2W[wi-1]] ? byW[last2W[wi-1]].value : null;
@@ -374,12 +454,14 @@ function buildBalanceSheet(region) {
         h += '<td>'+cell+chg+'</td>';
       });
     });
+
+    // Prediction column
     const model = fitPrediction(region, ra, currentY);
     if (model) {
-      const diff = model.nextVal - model.lastVal;
-      const pct  = model.lastVal!==0 ? (diff/Math.abs(model.lastVal))*100 : 0;
-      const cls  = diff>0?'up':diff<0?'dn':'';
-      const sign = diff>=0?'+':'';
+      const diff=model.nextVal-model.lastVal;
+      const pct=model.lastVal!==0?(diff/Math.abs(model.lastVal))*100:0;
+      const cls=diff>0?'up':diff<0?'dn':'';
+      const sign=diff>=0?'+':'';
       h += '<td class="pv">'+fmtNum(model.nextVal)+
            (Math.abs(pct)>=0.05
             ? '<br><span class="chg '+cls+'">'+sign+pct.toFixed(1)+'%</span>'
@@ -389,23 +471,34 @@ function buildBalanceSheet(region) {
     }
     h += '</tr>';
   });
+
   h += '</tbody></table></div>';
   return h;
 }
 
-function renderBalanceSheets() {
+// ── Render all 4 tables ───────────────────────────────────────
+function renderAllTables() {
   const worldR = findRegion(['world']);
-  const usR    = findRegion(['united states','u.s.','us -','usa']);
-  document.getElementById('world-table').innerHTML = buildBalanceSheet(worldR);
-  document.getElementById('us-table').innerHTML    = buildBalanceSheet(usR);
+  const usR    = findRegion(['united states','u.s.','usa']);
+  document.getElementById('tbl-world').innerHTML = buildTable(worldR);
+  document.getElementById('tbl-us').innerHTML    = buildTable(usR);
+  renderCustomTable(1);
+  renderCustomTable(2);
 }
 
+function renderCustomTable(n) {
+  const region = document.getElementById('sel-custom'+n).value;
+  document.getElementById('tbl-custom'+n).innerHTML = buildTable(region);
+  renderCustomPrediction(n);
+}
+
+// ── World + US summary / prediction ──────────────────────────
 function renderSummaryAndPrediction() {
   const last2W   = getLastNWasdeNums(2);
   const last3Y   = getLatestNMktYears(3);
   const currentY = last3Y[last3Y.length-1];
   const worldR   = findRegion(['world']);
-  const usR      = findRegion(['united states','u.s.','us -','usa']);
+  const usR      = findRegion(['united states','u.s.','usa']);
 
   if (last2W.length < 2) {
     document.getElementById('summary-text').innerHTML = '<p>Need at least 2 releases.</p>';
@@ -414,6 +507,7 @@ function renderSummaryAndPrediction() {
   }
   const w1=last2W[0], w2=last2W[1];
 
+  // Changes
   const changes = [];
   [worldR, usR].forEach(region => {
     if (!region) return;
@@ -423,22 +517,22 @@ function renderSummaryAndPrediction() {
       const pv = s.find(d=>d.wasdeNum===w1);
       const cv = s.find(d=>d.wasdeNum===w2);
       if (!pv||!cv||pv.value===0) return;
-      const diff=(cv.value-pv.value), pct=(diff/Math.abs(pv.value))*100;
+      const diff=cv.value-pv.value, pct=(diff/Math.abs(pv.value))*100;
       if (Math.abs(pct)>=0.5)
-        changes.push({region,attr,prev:pv.value,curr:cv.value,diff,pct,unit:cv.unit||''});
+        changes.push({region,attr,prev:pv.value,curr:cv.value,
+                      diff,pct,unit:cv.unit||''});
     });
   });
   changes.sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct));
 
   let sumH = '';
   if (!changes.length) {
-    sumH = '<p>No significant changes (&ge;0.5%) between last two releases for '+currentY+'.</p>';
+    sumH = '<p>No significant changes (&ge;0.5%) for '+currentY+'.</p>';
   } else {
     const top=changes.slice(0,8);
     const ups=top.filter(c=>c.diff>0).length, dns=top.filter(c=>c.diff<0).length;
-    sumH = '<p style="font-size:12px;color:#555;margin-bottom:.6rem">'+currentY+
-           ': <strong>'+ups+'</strong> attributes revised up, <strong>'+dns+
-           '</strong> down.</p><ul>';
+    sumH = '<p style="font-size:12px;color:#555;margin-bottom:.5rem">'+currentY+
+           ': <strong>'+ups+'</strong> up, <strong>'+dns+'</strong> down.</p><ul>';
     top.forEach(c => {
       const tag = c.diff>0
         ? '<span class="tag-up">+'+c.pct.toFixed(1)+'%</span>'
@@ -448,10 +542,11 @@ function renderSummaryAndPrediction() {
     });
     sumH += '</ul>';
     if (changes.length>8)
-      sumH += '<p style="font-size:11px;color:#888;margin-top:.4rem">+'+(changes.length-8)+' more</p>';
+      sumH += '<p style="font-size:11px;color:#888;margin-top:.3rem">+'+(changes.length-8)+' more</p>';
   }
   document.getElementById('summary-text').innerHTML = sumH;
 
+  // Prediction narrative (World + US)
   const bigMoves = [];
   [worldR, usR].forEach(region => {
     if (!region) return;
@@ -473,7 +568,7 @@ function renderSummaryAndPrediction() {
 
   let predH = '';
   if (!bigMoves.length) {
-    predH = '<p>Minimal changes expected in '+NR_MONTH+' for '+currentY+'.</p>';
+    predH = '<p>Minimal changes expected for '+currentY+'.</p>';
   } else {
     predH = '<ul>';
     bigMoves.slice(0,7).forEach(m => {
@@ -486,13 +581,65 @@ function renderSummaryAndPrediction() {
                ' <span style="font-size:10px;color:#aaa">('+m.method+')</span></li>';
     });
     predH += '</ul><p class="model-note">Predictions for <strong>'+NR_MONTH+
-             '</strong> release. Blends linear regression on current year\'s release ' +
-             'sequence with avg month-over-month change at the same release step across ' +
-             'the last 6 marketing years. Directional guidance only.</p>';
+             '</strong>. Blends linear regression with avg MoM change across last 6 years. Directional only.</p>';
   }
   document.getElementById('prediction-text').innerHTML = predH;
 }
 
+// ── Custom region prediction panel ───────────────────────────
+function buildPredictionPanel(region) {
+  if (!region) return '<div class="no-data">No region selected</div>';
+  const last3Y   = getLatestNMktYears(3);
+  const currentY = last3Y[last3Y.length-1];
+
+  const bigMoves = [];
+  deduped_attrs.forEach(attr => {
+    const ra    = resolveAttr(attr);
+    const model = fitPrediction(region, ra, currentY);
+    if (!model) return;
+    const pct = model.lastVal!==0
+      ? ((model.nextVal-model.lastVal)/Math.abs(model.lastVal))*100 : 0;
+    if (Math.abs(pct)>=0.5) {
+      const s = getSeries(region, ra, currentY);
+      bigMoves.push({attr, lastVal:model.lastVal, nextVal:model.nextVal,
+                     pct, method:model.method, unit:s[s.length-1]?.unit||''});
+    }
+  });
+  bigMoves.sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct));
+
+  if (!bigMoves.length)
+    return '<p style="font-size:12px;color:#888">Minimal changes expected for '+currentY+'.</p>';
+
+  let h = '<ul style="padding-left:1rem;list-style:disc">';
+  bigMoves.slice(0,6).forEach(m => {
+    const sign=m.pct>=0?'+':'';
+    const tag = m.pct>0
+      ? '<span class="tag-up">'+sign+m.pct.toFixed(1)+'%</span>'
+      : '<span class="tag-dn">'+m.pct.toFixed(1)+'%</span>';
+    h += '<li style="font-size:12px;line-height:1.8">'+tag+' <strong>'+m.attr+'</strong>: '+
+         fmtNum(m.lastVal)+' → '+fmtNum(m.nextVal)+' '+m.unit+
+         ' <span style="font-size:10px;color:#aaa">('+m.method+')</span></li>';
+  });
+  h += '</ul>';
+  if (bigMoves.length>6)
+    h += '<p style="font-size:11px;color:#888;margin-top:.3rem">+'+(bigMoves.length-6)+' more</p>';
+  h += '<p class="model-note">Predictions for <strong>'+NR_MONTH+'</strong> ('+currentY+'). Directional only.</p>';
+  return h;
+}
+
+function renderCustomPredictions() {
+  renderCustomPrediction(1);
+  renderCustomPrediction(2);
+}
+
+function renderCustomPrediction(n) {
+  const region = document.getElementById('sel-custom'+n).value;
+  document.getElementById('cpred'+n+'-title').textContent =
+    (region || 'Custom Region '+n) + ' — Next Release Prediction';
+  document.getElementById('cpred'+n).innerHTML = buildPredictionPanel(region);
+}
+
+// ── Forecast evolution chart ──────────────────────────────────
 function buildPills(years) {
   document.getElementById('mkt-pills').innerHTML = years.map(y =>
     '<button class="pill '+(activeYears.has(y)?'active':'')+
@@ -512,10 +659,10 @@ function toggleYear(year, el) {
 
 function renderChart() {
   if (!currentData) return;
-  const region   = document.getElementById('sel-region').value;
-  const attr     = document.getElementById('sel-attribute').value;
-  const ra       = resolveAttr(attr);
-  const datasets = [];
+  const region = document.getElementById('sel-region').value;
+  const attr   = document.getElementById('sel-attribute').value;
+  const ra     = resolveAttr(attr);
+  const sets   = [];
   let maxRel=0, unit='';
 
   [...activeYears].sort().forEach((mktYear,i) => {
@@ -523,22 +670,21 @@ function renderChart() {
     if (!series.length) return;
     if (series[0].unit) unit=series[0].unit;
     maxRel = Math.max(maxRel, series.length);
-    datasets.push({
+    sets.push({
       label: mktYear,
       data: series.map(p=>({x:p.releaseNum,y:p.value,
                              reportDate:p.reportDate,wasdeNum:p.wasdeNum})),
       borderColor: COLORS[i%COLORS.length],
       backgroundColor: COLORS[i%COLORS.length]+'18',
-      borderWidth:2, pointRadius:3, pointHoverRadius:6,
-      tension:0.3, fill:false
+      borderWidth:2, pointRadius:3, pointHoverRadius:6, tension:0.3, fill:false
     });
   });
 
   if (chart) chart.destroy();
-  if (!datasets.length) return;
+  if (!sets.length) return;
   const labels = Array.from({length:maxRel},(_,i)=>'Release '+(i+1));
   chart = new Chart(document.getElementById('myChart'), {
-    type:'line', data:{labels,datasets},
+    type:'line', data:{labels, datasets:sets},
     options:{
       responsive:true, maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
