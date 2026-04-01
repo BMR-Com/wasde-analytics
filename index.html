@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WASDE Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
+  header{background:#1a2e1a;color:#fff;padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between}
+  header h1{font-size:1.2rem;font-weight:500;letter-spacing:-.01em}
+  #last-updated{font-size:12px;opacity:.6}
+  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;padding:1.25rem 2rem;background:#fff;border-bottom:1px solid #e5e5e0}
+  .ctrl label{display:block;font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+  select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff;appearance:none;cursor:pointer}
+  .mkt-year-wrap{padding:.75rem 2rem;background:#fafaf8;border-bottom:1px solid #e5e5e0}
+  .mkt-year-wrap label{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px}
+  .pills{display:flex;flex-wrap:wrap;gap:6px}
+  .pill{padding:4px 12px;border-radius:99px;font-size:12px;cursor:pointer;border:1px solid #ccc;background:#fff;transition:all .15s}
+  .pill.active{background:#1a2e1a;color:#fff;border-color:#1a2e1a}
+  .chart-wrap{padding:1.5rem 2rem;max-width:1100px;margin:0 auto}
+  #chart-container{background:#fff;border-radius:10px;padding:1.25rem;border:1px solid #e5e5e0;position:relative;min-height:420px}
+  #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#888;background:#fff;border-radius:10px;z-index:10}
+  .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1rem}
+  .stat{background:#f5f5f3;border-radius:7px;padding:.75rem 1rem;text-align:center}
+  .stat-n{font-size:20px;font-weight:500;color:#1a2e1a}
+  .stat-l{font-size:11px;color:#888;margin-top:2px}
+  #no-data{display:none;text-align:center;padding:3rem;color:#aaa;font-size:14px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>WASDE Analytics — Forecast Evolution</h1>
+  <span id="last-updated"></span>
+</header>
+
+<div class="controls">
+  <div class="ctrl">
+    <label>Commodity</label>
+    <select id="sel-commodity" onchange="onCommodityChange()"><option>Loading...</option></select>
+  </div>
+  <div class="ctrl">
+    <label>Region</label>
+    <select id="sel-region" onchange="renderChart()"><option>All</option></select>
+  </div>
+  <div class="ctrl">
+    <label>Attribute</label>
+    <select id="sel-attribute" onchange="renderChart()"><option>Ending Stocks</option></select>
+  </div>
+</div>
+
+<div class="mkt-year-wrap">
+  <label>Marketing Years (click to toggle — compare multiple years)</label>
+  <div class="pills" id="mkt-pills"></div>
+</div>
+
+<div class="chart-wrap">
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-n" id="st-years">—</div><div class="stat-l">years shown</div></div>
+    <div class="stat"><div class="stat-n" id="st-releases">—</div><div class="stat-l">max releases</div></div>
+    <div class="stat"><div class="stat-n" id="st-unit">—</div><div class="stat-l">unit</div></div>
+    <div class="stat"><div class="stat-n" id="st-updated">—</div><div class="stat-l">last updated</div></div>
+  </div>
+  <div id="chart-container">
+    <div id="loading">Loading data...</div>
+    <div id="no-data">No data for this selection</div>
+    <canvas id="myChart"></canvas>
+  </div>
+</div>
+
+<script>
+const BASE = './data';
+const COLORS = [
+  '#2563eb','#dc2626','#16a34a','#d97706','#7c3aed',
+  '#0891b2','#be185d','#65a30d','#ea580c','#6d28d9',
+  '#0d9488','#b45309','#1d4ed8','#15803d','#c2410c'
+];
+
+let manifest = null;
+let currentData = null;
+let chart = null;
+let activeYears = new Set();
+
+// ── Boot ──────────────────────────────────────────────────────
+async function boot() {
+  const res  = await fetch(`${BASE}/manifest.json`);
+  manifest   = await res.json();
+  document.getElementById('last-updated').textContent = 'Updated: ' + manifest.lastUpdated;
+  document.getElementById('st-updated').textContent   = manifest.lastUpdated;
+
+  const sel = document.getElementById('sel-commodity');
+  sel.innerHTML = manifest.commodities
+    .map(c => `<option value="${c.file}">${c.commodity}</option>`).join('');
+  await onCommodityChange();
+}
+
+async function onCommodityChange() {
+  showLoading(true);
+  const file = document.getElementById('sel-commodity').value;
+  const res  = await fetch(`${BASE}/${file}`);
+  currentData = await res.json();
+
+  // Populate region
+  const rSel = document.getElementById('sel-region');
+  rSel.innerHTML = ['All', ...currentData.regions].map(r => `<option>${r}</option>`).join('');
+
+  // Populate attribute — try to default to Ending Stocks
+  const aSel = document.getElementById('sel-attribute');
+  aSel.innerHTML = currentData.attributes.map(a => `<option>${a}</option>`).join('');
+  const esIdx = currentData.attributes.findIndex(a => a.toLowerCase().includes('ending'));
+  if (esIdx >= 0) aSel.selectedIndex = esIdx;
+
+  // Default active years: last 5
+  const allYears = currentData.marketYears;
+  activeYears = new Set(allYears.slice(-5));
+  buildPills(allYears);
+  renderChart();
+}
+
+function buildPills(years) {
+  const wrap = document.getElementById('mkt-pills');
+  wrap.innerHTML = years.map(y => `
+    <button class="pill ${activeYears.has(y)?'active':''}" onclick="toggleYear('${y}',this)">${y}</button>
+  `).join('');
+}
+
+function toggleYear(year, el) {
+  if (activeYears.has(year)) {
+    if (activeYears.size === 1) return; // keep at least 1
+    activeYears.delete(year);
+    el.classList.remove('active');
+  } else {
+    activeYears.add(year);
+    el.classList.add('active');
+  }
+  renderChart();
+}
+
+function renderChart() {
+  if (!currentData) return;
+  const region    = document.getElementById('sel-region').value;
+  const attribute = document.getElementById('sel-attribute').value;
+
+  // Collect series for each active marketing year
+  const datasets = [];
+  let maxReleases = 0;
+  let unit = '';
+
+  const sortedYears = [...activeYears].sort();
+
+  sortedYears.forEach((mktYear, i) => {
+    // Try exact region first, else aggregate across regions if "All"
+    let points = [];
+    if (region === 'All') {
+      // Sum across all regions for this attribute + mkt year
+      const regionKeys = currentData.regions.map(r => `${r}||${attribute}||${mktYear}`);
+      const combined = {};
+      regionKeys.forEach(k => {
+        (currentData.data[k] || []).forEach(d => {
+          if (!combined[d.releaseNum]) combined[d.releaseNum] = {...d, value: 0};
+          combined[d.releaseNum].value += d.value;
+        });
+      });
+      points = Object.values(combined).sort((a,b) => a.releaseNum - b.releaseNum);
+    } else {
+      const key = `${region}||${attribute}||${mktYear}`;
+      points = (currentData.data[key] || []).sort((a,b) => a.releaseNum - b.releaseNum);
+    }
+
+    if (!points.length) return;
+    if (points[0]?.unit) unit = points[0].unit;
+    maxReleases = Math.max(maxReleases, points.length);
+
+    datasets.push({
+      label: mktYear,
+      data: points.map(p => ({ x: p.releaseNum, y: p.value, reportDate: p.reportDate, wasdeNum: p.wasdeNum })),
+      borderColor: COLORS[i % COLORS.length],
+      backgroundColor: COLORS[i % COLORS.length] + '18',
+      borderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 6,
+      tension: 0.3,
+      fill: false
+    });
+  });
+
+  // Update stats
+  document.getElementById('st-years').textContent    = datasets.length;
+  document.getElementById('st-releases').textContent = maxReleases;
+  document.getElementById('st-unit').textContent     = unit || '—';
+
+  const noData = document.getElementById('no-data');
+  const canvas = document.getElementById('myChart');
+  if (!datasets.length) {
+    noData.style.display = 'block';
+    canvas.style.display = 'none';
+    showLoading(false);
+    return;
+  }
+  noData.style.display = 'none';
+  canvas.style.display = 'block';
+
+  // Build x-axis labels
+  const xLabels = Array.from({length: maxReleases}, (_, i) => `Release ${i+1}`);
+
+  if (chart) chart.destroy();
+  chart = new Chart(canvas, {
+    type: 'line',
+    data: { labels: xLabels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 12 }, boxWidth: 14 } },
+        tooltip: {
+          callbacks: {
+            title: ctx => `Release ${ctx[0].parsed.x + 1}`,
+            afterBody: ctx => {
+              const raw = ctx[0].raw;
+              return `WASDE #${raw.wasdeNum}  —  ${raw.reportDate}`;
+            },
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()} ${unit}`
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Release number (months since first forecast)', font: { size: 12 } } },
+        y: { title: { display: true, text: unit, font: { size: 12 } },
+             ticks: { callback: v => v.toLocaleString() } }
+      }
+    }
+  });
+  chart.canvas.parentNode.style.height = '420px';
+  showLoading(false);
+}
+
+function showLoading(on) {
+  document.getElementById('loading').style.display = on ? 'flex' : 'none';
+}
+
+boot();
+</script>
+</body>
+</html>
