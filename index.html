@@ -185,7 +185,6 @@ const WASDE_2026 = [
   '2026-09-11','2026-10-09','2026-11-10','2026-12-10'
 ];
 
-// ── Attribute ordering ────────────────────────────────────────
 const ATTR_RULES = [
   [/^area.*(planted|seeded)/i,           0],
   [/^area.*(harv)/i,                     0],
@@ -213,64 +212,46 @@ const ATTR_RULES = [
   [/^avg.*price/i,                       5],
 ];
 
-// ── Per-table exclusion rules ─────────────────────────────────
 const EXCL_ALL = [
-  /farm.price.*high/i,
-  /farm.price.*low/i,
-  /price.*high/i,
-  /price.*low/i,
+  /farm.price.*high/i, /farm.price.*low/i, /price.*high/i, /price.*low/i,
   /^exports?,\s*total/i,
 ];
-
 const EXCL_WORLD = [
-  /^use.*(total|,\s*total)/i,
-  /^total\s*use/i,
-  /^unaccounted/i,
-  /^area.*(planted|seeded)/i,
+  /^use.*(total|,\s*total)/i, /^total\s*use/i,
+  /^unaccounted/i, /^area.*(planted|seeded)/i,
 ];
-
 const EXCL_CUSTOM = [
-  /^avg.*farm.*price/i,
-  /^avg.*price/i,
-  /^area.*(harv)/i,
-  /^loss/i,
-  /^output/i,
-  /^supply.*(total|,\s*total)/i,
-  /^total.supply/i,
-  /^use.*(total|,\s*total)/i,
-  /^total\s*use/i,
-  /^trade/i,
-  /^unaccounted/i,
-  /^area.*(planted|seeded)/i,
+  /^avg.*farm.*price/i, /^avg.*price/i, /^area.*(harv)/i,
+  /^loss/i, /^output/i,
+  /^supply.*(total|,\s*total)/i, /^total.supply/i,
+  /^use.*(total|,\s*total)/i, /^total\s*use/i,
+  /^trade/i, /^unaccounted/i, /^area.*(planted|seeded)/i,
 ];
 
 const DERIVED_PAT = [
-  /^supply.*(total|,\s*total)/i,
-  /^total.supply/i,
-  /^use.*(total|,\s*total)/i,
-  /^total\s*use/i,
+  /^supply.*(total|,\s*total)/i, /^total.supply/i,
+  /^use.*(total|,\s*total)/i,    /^total\s*use/i,
   /^ending.stock/i,
 ];
 
 function isDerived(a){ return DERIVED_PAT.some(rx=>rx.test(a.trim())); }
 function isEndingStocks(a){ return /^ending.stock/i.test(a.trim()); }
 function isProduction(a){ return /^production/i.test(a.trim()); }
-function isWorldRegion(r){ return r&&r.toLowerCase().includes('world'); }
+function isWorldReg(r){ return r&&r.toLowerCase().includes('world'); }
 
-function isExcluded(a, tableType){
+function isExcluded(a,tt){
   const t=a.trim();
-  if (EXCL_ALL.some(rx=>rx.test(t))) return true;
-  if ((tableType==='world'||tableType==='custom') && EXCL_WORLD.some(rx=>rx.test(t))) return true;
-  if (tableType==='custom' && EXCL_CUSTOM.some(rx=>rx.test(t))) return true;
+  if(EXCL_ALL.some(rx=>rx.test(t)))return true;
+  if((tt==='world'||tt==='custom')&&EXCL_WORLD.some(rx=>rx.test(t)))return true;
+  if(tt==='custom'&&EXCL_CUSTOM.some(rx=>rx.test(t)))return true;
   return false;
 }
-
 function attrSortKey(a){
-  for(let i=0;i<ATTR_RULES.length;i++) if(ATTR_RULES[i][0].test(a.trim())) return i*100+ATTR_RULES[i][1];
+  for(let i=0;i<ATTR_RULES.length;i++)if(ATTR_RULES[i][0].test(a.trim()))return i*100+ATTR_RULES[i][1];
   return 9999;
 }
 function attrGroup(a){
-  for(const [rx,g] of ATTR_RULES) if(rx.test(a.trim())) return g;
+  for(const[rx,g]of ATTR_RULES)if(rx.test(a.trim()))return g;
   return 99;
 }
 
@@ -278,7 +259,7 @@ function getNextReleaseInfo(){
   const now=new Date();
   for(const ds of WASDE_2026){
     const d=new Date(ds+'T17:00:00Z');
-    if(d>now) return{
+    if(d>now)return{
       label:d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
       days:Math.ceil((d-now)/86400000),
       month:d.toLocaleDateString('en-US',{month:'long',year:'numeric'})
@@ -294,6 +275,10 @@ function getNextReleaseInfo(){
 
 let manifest=null,currentData=null,chart=null;
 let activeYears=new Set(),all_attrs_sorted=[],NR_MONTH='';
+
+// ── Formula cache: discovered ES components per region ────────
+// esFormulaCache[region] = { addAttrs:[], subAttrs:[], methodLabel:'' }
+const esFormulaCache = {};
 
 async function boot(){
   const nri=getNextReleaseInfo();
@@ -317,11 +302,13 @@ async function boot(){
 
 async function onCommodityChange(){
   setLoading();
+  // Clear formula cache when commodity changes
+  Object.keys(esFormulaCache).forEach(k=>delete esFormulaCache[k]);
+
   const file=document.getElementById('sel-commodity').value;
   const res=await fetch(BASE+'/'+file);
   currentData=await res.json();
 
-  // Full sorted list (US-table level, no exclusions except all-table ones)
   all_attrs_sorted=sortDedupeAttrs(currentData.attributes,'us');
 
   const regions=currentData.regions;
@@ -339,7 +326,7 @@ async function onCommodityChange(){
   const aSel=document.getElementById('sel-attribute');
   aSel.innerHTML=all_attrs_sorted.map(a=>'<option>'+a+'</option>').join('');
   const esIdx=all_attrs_sorted.findIndex(a=>/^ending.stock/i.test(a));
-  if(esIdx>=0) aSel.selectedIndex=esIdx;
+  if(esIdx>=0)aSel.selectedIndex=esIdx;
 
   activeYears=new Set(currentData.marketYears.slice(-5));
   buildPills(currentData.marketYears);
@@ -356,10 +343,10 @@ function setLoading(){
   });
 }
 
-function sortDedupeAttrs(attrs,tableType){
+function sortDedupeAttrs(attrs,tt){
   const seen=new Map();
   attrs.forEach(a=>{
-    if(isExcluded(a,tableType))return;
+    if(isExcluded(a,tt))return;
     const norm=a.trim().toLowerCase().replace(/\s+/g,' ');
     if(!seen.has(norm)){seen.set(norm,a);}
     else{
@@ -371,6 +358,7 @@ function sortDedupeAttrs(attrs,tableType){
 }
 
 function resolveAttr(attr){
+  if(!attr)return null;
   const norm=attr.trim().toLowerCase().replace(/\s+/g,' ');
   return currentData.attributes.find(a=>a.trim().toLowerCase().replace(/\s+/g,' ')===norm)||attr;
 }
@@ -381,6 +369,10 @@ function getSeries(region,attr,mktYear){
   const norm=key.toLowerCase().replace(/\s+/g,' ');
   const found=Object.keys(currentData.data).find(k=>k.toLowerCase().replace(/\s+/g,' ')===norm);
   return found?currentData.data[found].sort((a,b)=>a.releaseNum-b.releaseNum):[];
+}
+
+function validSeries(region,attr,mktYear){
+  return getSeries(region,attr,mktYear).filter(d=>d.unitOk!==false);
 }
 
 function getCanonUnit(region,attr){
@@ -397,10 +389,7 @@ function findRegion(kws){
 
 function findAttrByPat(patterns,attrList){
   const list=attrList||all_attrs_sorted;
-  for(const rx of patterns){
-    const f=list.find(a=>rx.test(a.trim()));
-    if(f)return resolveAttr(f);
-  }
+  for(const rx of patterns){const f=list.find(a=>rx.test(a.trim()));if(f)return resolveAttr(f);}
   return null;
 }
 
@@ -409,23 +398,14 @@ function getLastNWasdeNums(n){
   Object.values(currentData.data).forEach(arr=>arr.forEach(d=>nums.add(d.wasdeNum)));
   return[...nums].sort((a,b)=>b-a).slice(0,n).sort((a,b)=>a-b);
 }
-
-function getLatestNMktYears(n){
-  return[...currentData.marketYears].sort().slice(-n);
-}
-
+function getLatestNMktYears(n){return[...currentData.marketYears].sort().slice(-n);}
 function fmtNum(v){
   if(v===null||v===undefined)return'—';
   const n=parseFloat(v);
   return isNaN(n)?'—':n.toLocaleString(undefined,{maximumFractionDigits:2});
 }
 
-// Only use entries with valid unit conversions
-function validSeries(region,attr,mktYear){
-  return getSeries(region,attr,mktYear).filter(d=>d.unitOk!==false);
-}
-
-// ── Prediction model ──────────────────────────────────────────
+// ── Regression model ──────────────────────────────────────────
 function linReg(xs,ys){
   const n=xs.length;if(n<2)return null;
   const mx=xs.reduce((a,b)=>a+b,0)/n,my=ys.reduce((a,b)=>a+b,0)/n;
@@ -462,87 +442,218 @@ function fitDirect(region,resolvedAttr,mktYear){
 
 function getPredVal(region,attrDisplay,mktYear){
   if(!attrDisplay)return null;
-  const m=fitDirect(region,resolveAttr(attrDisplay),mktYear);
+  const ra=resolveAttr(attrDisplay);if(!ra)return null;
+  const m=fitDirect(region,ra,mktYear);
   return m?m.nextVal:null;
 }
 
-function fitDerived(region,attrDisplay,mktYear){
-  const a=attrDisplay.trim();
-  const s=validSeries(region,resolveAttr(attrDisplay),mktYear);
-  const lastVal=s.length?s[s.length-1].value:null;
-  const isGrain=currentData.isGrain===true;
-  const isWorld=isWorldRegion(region);
+// ── Empirical ES formula discovery ────────────────────────────
+// For a given region, examines recent actual data to discover which
+// attributes are additive vs subtractive in the ES identity.
+// ES = sum(additive attrs) - sum(subtractive attrs)
+// We know additive = {Beginning Stocks, Production, [Imports for non-World]}
+// We derive subtractive by: subtractive = additive_sum - ES (from actual data)
+// Then we check which combination of candidate use-attrs best explains that.
 
-  // ── Supply Total ──────────────────────────────────────────
-  if(/^supply.*(total|,\s*total)/i.test(a)||/^total.supply/i.test(a)){
-    const vBS=getPredVal(region,findAttrByPat([/^beginning.stock/i]),mktYear);
-    const vPr=getPredVal(region,findAttrByPat([/^production/i]),mktYear);
-    if(vBS===null||vPr===null)return null;
-    if(isWorld){
-      // World: Supply = Beginning Stocks + Production (no imports)
-      return{nextVal:Math.round((vBS+vPr)*100)/100,lastVal,
-             method:'derived (BS+Prod)',isDerived:true};
-    } else {
-      // US/country: Supply = Beginning Stocks + Production + Imports
-      const vIm=getPredVal(region,findAttrByPat([/^import/i]),mktYear)||0;
-      return{nextVal:Math.round((vBS+vPr+vIm)*100)/100,lastVal,
-             method:'derived (BS+Prod+Imp)',isDerived:true};
-    }
-  }
+function discoverESFormula(region){
+  if(esFormulaCache[region])return esFormulaCache[region];
 
-  // ── Use Total ─────────────────────────────────────────────
-  if(/^use.*(total|,\s*total)/i.test(a)||/^total\s*use/i.test(a)){
-    const comps=all_attrs_sorted.filter(x=>{
-      const t=x.trim();
-      return !isDerived(x)&&(
-        /^crushing/i.test(t)||/^domestic.use/i.test(t)||/^domestic.disappear/i.test(t)||
-        /^domestic.*total/i.test(t)||/^biofuel/i.test(t)||/^food.*feed/i.test(t)||
-        /^food.*industrial/i.test(t)||/^export(?!s?,\s*total)/i.test(t)||
-        /^seed/i.test(t)||/^residual/i.test(t));
+  const esDispAttr=all_attrs_sorted.find(a=>/^ending.stock/i.test(a));
+  if(!esDispAttr){esFormulaCache[region]=null;return null;}
+  const esRA=resolveAttr(esDispAttr);
+
+  // Additive (supply) components
+  const bsRA   = findAttrByPat([/^beginning.stock/i]);
+  const prodRA = findAttrByPat([/^production/i]);
+  const impRA  = isWorldReg(region)?null:findAttrByPat([/^import/i]);
+
+  // Candidate subtractive components: all non-derived, non-supply attrs
+  const candAttrs = all_attrs_sorted.filter(a=>{
+    const t=a.trim();
+    return !isDerived(a) &&
+           !/^beginning.stock/i.test(t) &&
+           !/^production/i.test(t) &&
+           !/^import/i.test(t) &&
+           !/^area/i.test(t) &&
+           !/^yield/i.test(t) &&
+           !/avg.*farm.*price/i.test(t) &&
+           !/avg.*price/i.test(t);
+  });
+
+  // Collect data points: for each (mktYear, wasdeNum) where we have ES + supply attrs
+  const dataPoints=[];
+  currentData.marketYears.slice(-5).forEach(yr=>{
+    const esSer=validSeries(region,esRA,yr);
+    esSer.forEach(esEntry=>{
+      const wn=esEntry.wasdeNum;
+      const esVal=esEntry.value;
+
+      const getV=(ra)=>{
+        if(!ra)return null;
+        const s=getSeries(region,ra,yr);
+        const e=s.find(d=>d.wasdeNum===wn);
+        return(e&&e.unitOk!==false)?e.value:null;
+      };
+
+      const bs=getV(bsRA),prod=getV(prodRA);
+      if(bs===null||prod===null)return;
+      const imp=impRA?getV(impRA):null;
+
+      const supply=bs+prod+(imp||0);
+      const impliedSub=supply-esVal;  // this is what the subtractive components should sum to
+
+      const compVals={};
+      candAttrs.forEach(a=>{
+        const v=getV(resolveAttr(a));
+        if(v!==null)compVals[a]=v;
+      });
+
+      dataPoints.push({yr,wn,esVal,supply,impliedSub,compVals});
     });
-    let total=0;
-    comps.forEach(c=>{const v=getPredVal(region,c,mktYear);if(v!==null)total+=v;});
-    return{nextVal:Math.round(total*100)/100,lastVal,
-           method:'derived (sum use comps)',isDerived:true};
+  });
+
+  if(dataPoints.length<2){
+    esFormulaCache[region]=null;
+    return null;
   }
 
-  // ── Ending Stocks ─────────────────────────────────────────
-  if(/^ending.stock/i.test(a)){
-    const supA=all_attrs_sorted.find(x=>/^supply.*(total|,\s*total)/i.test(x)||/^total.supply/i.test(x));
-    const supM=supA?fitDerived(region,supA,mktYear):null;
-    if(!supM)return null;
+  // Find which subset of candAttrs best explains impliedSub across all data points
+  // Use a greedy forward-selection approach:
+  // Start with no components, add the one that reduces total error most, repeat.
 
-    if(isGrain){
-      // Grains: EndStocks = SupplyTotal - DomesticTotal - Exports - Unaccounted
-      const vDomTot=getPredVal(region,findAttrByPat([/^domestic.*total/i,/^domestic.use/i]),mktYear)||0;
-      const vExp   =getPredVal(region,findAttrByPat([/^export(?!s?,\s*total)/i]),mktYear)||0;
-      const vUnc   =getPredVal(region,findAttrByPat([/^unaccounted/i]),mktYear)||0;
-      const nextVal=Math.round((supM.nextVal-vDomTot-vExp-vUnc)*100)/100;
-      return{nextVal,lastVal,method:'derived (Sup−DomTot−Exp−Unacc)',isDerived:true};
-    } else {
-      // Non-grain: EndStocks = Supply - UseTotal - Unaccounted
-      const useA=all_attrs_sorted.find(x=>/^use.*(total|,\s*total)/i.test(x)||/^total\s*use/i.test(x));
-      const useM=useA?fitDerived(region,useA,mktYear):null;
-      const vUnc=getPredVal(region,findAttrByPat([/^unaccounted/i]),mktYear)||0;
-      if(!useM)return null;
-      return{nextVal:Math.round((supM.nextVal-useM.nextVal-vUnc)*100)/100,
-             lastVal,method:'derived (Sup−Use−Unacc)',isDerived:true};
+  const totalImplied=dataPoints.map(dp=>dp.impliedSub);
+  const avgImplied  =totalImplied.reduce((a,b)=>a+b,0)/totalImplied.length;
+
+  // Error function: mean absolute error across data points
+  function mae(compList){
+    const errs=dataPoints.map(dp=>{
+      const sum=compList.reduce((s,a)=>s+(dp.compVals[a]||0),0);
+      return Math.abs(sum-dp.impliedSub);
+    });
+    return errs.reduce((a,b)=>a+b,0)/errs.length;
+  }
+
+  let selected=[];
+  let remaining=[...candAttrs.filter(a=>dataPoints.some(dp=>a in dp.compVals))];
+  let bestMAE=mae([]);  // baseline: 0 comps
+
+  let improved=true;
+  while(improved&&remaining.length>0){
+    improved=false;
+    let bestComp=null,bestErr=bestMAE;
+    for(const c of remaining){
+      const err=mae([...selected,c]);
+      if(err<bestErr){bestErr=err;bestComp=c;}
+    }
+    if(bestComp){
+      selected.push(bestComp);
+      remaining=remaining.filter(c=>c!==bestComp);
+      bestMAE=bestErr;
+      improved=true;
     }
   }
 
-  return null;
+  // Build human-readable method label
+  const subNames=selected.map(a=>a.length>20?a.slice(0,18)+'…':a);
+  const addParts=['BS','Prod'];
+  if(impRA)addParts.push('Imp');
+  const methodLabel='derived ('+addParts.join('+')+' − '+subNames.slice(0,3).join('−')+
+                    (subNames.length>3?'−…':'')+')';
+
+  // Compute formula accuracy on last data point for sanity check
+  const lastDP=dataPoints[dataPoints.length-1];
+  const checkSum=selected.reduce((s,a)=>s+(lastDP.compVals[a]||0),0);
+  const checkES=lastDP.supply-checkSum;
+  const checkErr=Math.abs(checkES-lastDP.esVal);
+
+  const formula={
+    bsRA, prodRA, impRA,
+    subAttrs: selected,
+    methodLabel,
+    includeImports: !!impRA,
+    lastCheckErr: checkErr,
+    lastCheckES: lastDP.esVal
+  };
+  esFormulaCache[region]=formula;
+  return formula;
 }
 
+// ── Predict ES using discovered formula ───────────────────────
+function fitESPrediction(region,attrDisplay,mktYear){
+  const formula=discoverESFormula(region);
+  if(!formula)return null;
+
+  const s=validSeries(region,resolveAttr(attrDisplay),mktYear);
+  const lastVal=s.length?s[s.length-1].value:null;
+
+  const vBS  =getPredVal(region,formula.bsRA,mktYear);
+  const vProd=getPredVal(region,formula.prodRA,mktYear);
+  if(vBS===null||vProd===null)return null;
+
+  let supply=vBS+vProd;
+  if(formula.includeImports&&formula.impRA){
+    const vImp=getPredVal(region,formula.impRA,mktYear);
+    if(vImp!==null)supply+=vImp;
+  }
+
+  let totalSub=0;
+  formula.subAttrs.forEach(a=>{
+    const v=getPredVal(region,a,mktYear);
+    if(v!==null)totalSub+=v;
+  });
+
+  const nextVal=Math.round((supply-totalSub)*100)/100;
+  return{nextVal,lastVal,method:formula.methodLabel,isDerived:true};
+}
+
+// ── Supply Total prediction ───────────────────────────────────
+function fitSupplyPrediction(region,attrDisplay,mktYear){
+  const s=validSeries(region,resolveAttr(attrDisplay),mktYear);
+  const lastVal=s.length?s[s.length-1].value:null;
+  const bsRA  =findAttrByPat([/^beginning.stock/i]);
+  const prodRA=findAttrByPat([/^production/i]);
+  const impRA =isWorldReg(region)?null:findAttrByPat([/^import/i]);
+  const vBS=getPredVal(region,bsRA,mktYear);
+  const vProd=getPredVal(region,prodRA,mktYear);
+  if(vBS===null||vProd===null)return null;
+  let supply=vBS+vProd;
+  let method='derived (BS+Prod';
+  if(impRA){const vImp=getPredVal(region,impRA,mktYear)||0;supply+=vImp;method+= '+Imp';}
+  method+=')';
+  return{nextVal:Math.round(supply*100)/100,lastVal,method,isDerived:true};
+}
+
+// ── Use Total prediction (sum of use components) ──────────────
+function fitUsePrediction(region,attrDisplay,mktYear){
+  const s=validSeries(region,resolveAttr(attrDisplay),mktYear);
+  const lastVal=s.length?s[s.length-1].value:null;
+  const useComps=all_attrs_sorted.filter(a=>{
+    const t=a.trim();
+    return !isDerived(a)&&(
+      /^crushing/i.test(t)||/^domestic.use/i.test(t)||/^domestic.disappear/i.test(t)||
+      /^domestic.*total/i.test(t)||/^biofuel/i.test(t)||/^food.*feed/i.test(t)||
+      /^food.*industrial/i.test(t)||/^export(?!s?,\s*total)/i.test(t)||
+      /^seed/i.test(t)||/^residual/i.test(t));
+  });
+  let total=0;
+  useComps.forEach(a=>{const v=getPredVal(region,a,mktYear);if(v!==null)total+=v;});
+  return{nextVal:Math.round(total*100)/100,lastVal,method:'derived (sum use comps)',isDerived:true};
+}
+
+// ── Main prediction dispatcher ────────────────────────────────
 function fitPrediction(region,attrDisplay,mktYear){
-  return isDerived(attrDisplay)
-    ?fitDerived(region,attrDisplay,mktYear)
-    :fitDirect(region,resolveAttr(attrDisplay),mktYear);
+  const a=attrDisplay.trim();
+  if(/^ending.stock/i.test(a))       return fitESPrediction(region,attrDisplay,mktYear);
+  if(/^supply.*(total|,\s*total)/i.test(a)||/^total.supply/i.test(a))
+                                      return fitSupplyPrediction(region,attrDisplay,mktYear);
+  if(/^use.*(total|,\s*total)/i.test(a)||/^total\s*use/i.test(a))
+                                      return fitUsePrediction(region,attrDisplay,mktYear);
+  return fitDirect(region,resolveAttr(attrDisplay),mktYear);
 }
 
 // ── Build table ───────────────────────────────────────────────
 function buildTable(region,tableType){
   if(!region)return'<div class="no-data">Region not available for this commodity</div>';
-
   const attrs  =sortDedupeAttrs(currentData.attributes,tableType);
   const last2W =getLastNWasdeNums(2);
   const last3Y =getLatestNMktYears(3);
@@ -568,7 +679,6 @@ function buildTable(region,tableType){
   h+='</tr></thead><tbody>';
 
   let prevGroup=null;
-
   attrs.forEach(attr=>{
     const ra     =resolveAttr(attr);
     const grp    =attrGroup(attr);
@@ -613,8 +723,7 @@ function buildTable(region,tableType){
       const sign=diff>=0?'+':'';
       const tdCls=derived?'pv-derived':'pv';
       h+='<td class="'+tdCls+'">'+fmtNum(model.nextVal)+
-         (Math.abs(pct)>=0.05&&Math.abs(pct)<300
-          ?'<br><span class="chg '+cls+'">'+sign+pct.toFixed(1)+'%</span>':'')+'</td>';
+         (Math.abs(pct)>=0.05&&Math.abs(pct)<300?'<br><span class="chg '+cls+'">'+sign+pct.toFixed(1)+'%</span>':'')+'</td>';
     }else{
       h+='<td class="'+(derived?'pv-derived':'pv')+'">—</td>';
     }
@@ -625,7 +734,7 @@ function buildTable(region,tableType){
   h+='<div class="tbl-legend">'+
      '<div class="tll"><div class="tll-box" style="background:#fef9e7;border:1px solid #f5c518"></div>Ending Stocks</div>'+
      '<div class="tll"><div class="tll-box" style="background:#e8f5e9;border:1px solid #81c784"></div>Production</div>'+
-     '<div class="tll"><span style="color:#1e40af;font-style:italic">* derived</span></div>'+
+     '<div class="tll"><span style="color:#1e40af;font-style:italic">* derived (formula learned from data)</span></div>'+
      '</div>';
   return h;
 }
@@ -638,7 +747,6 @@ function renderAllTables(){
   renderCustomTable(1);
   renderCustomTable(2);
 }
-
 function renderCustomTable(n){
   if(!currentData)return;
   const region=document.getElementById('sel-custom'+n).value;
@@ -681,19 +789,15 @@ function renderSummaryAndPrediction(){
   changes.sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct));
 
   let sumH='';
-  if(!changes.length){
-    sumH='<p>No significant changes (&ge;0.5%) for '+currentY+'.</p>';
-  }else{
+  if(!changes.length){sumH='<p>No significant changes (&ge;0.5%) for '+currentY+'.</p>';}
+  else{
     const top=changes.slice(0,8);
     const ups=top.filter(c=>c.diff>0).length,dns=top.filter(c=>c.diff<0).length;
     sumH='<p style="font-size:12px;color:#555;margin-bottom:.5rem">'+currentY+
          ': <strong>'+ups+'</strong> up, <strong>'+dns+'</strong> down.</p><ul>';
     top.forEach(c=>{
-      const tag=c.diff>0
-        ?'<span class="tag-up">+'+c.pct.toFixed(1)+'%</span>'
-        :'<span class="tag-dn">'+c.pct.toFixed(1)+'%</span>';
-      sumH+='<li>'+tag+' <strong>'+c.attr+'</strong> ('+c.region+'): '+
-            fmtNum(c.prev)+' → '+fmtNum(c.curr)+' '+c.unit+'</li>';
+      const tag=c.diff>0?'<span class="tag-up">+'+c.pct.toFixed(1)+'%</span>':'<span class="tag-dn">'+c.pct.toFixed(1)+'%</span>';
+      sumH+='<li>'+tag+' <strong>'+c.attr+'</strong> ('+c.region+'): '+fmtNum(c.prev)+' → '+fmtNum(c.curr)+' '+c.unit+'</li>';
     });
     sumH+='</ul>';
     if(changes.length>8)sumH+='<p style="font-size:11px;color:#888;margin-top:.3rem">+'+(changes.length-8)+' more</p>';
@@ -719,23 +823,18 @@ function renderSummaryAndPrediction(){
   bigMoves.sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct));
 
   let predH='';
-  if(!bigMoves.length){
-    predH='<p>Minimal changes expected for '+currentY+'.</p>';
-  }else{
+  if(!bigMoves.length){predH='<p>Minimal changes expected for '+currentY+'.</p>';}
+  else{
     predH='<ul>';
     bigMoves.slice(0,9).forEach(m=>{
       const sign=m.pct>=0?'+':'';
-      const tag=m.pct>0
-        ?'<span class="tag-up">'+sign+m.pct.toFixed(1)+'%</span>'
-        :'<span class="tag-dn">'+m.pct.toFixed(1)+'%</span>';
+      const tag=m.pct>0?'<span class="tag-up">'+sign+m.pct.toFixed(1)+'%</span>':'<span class="tag-dn">'+m.pct.toFixed(1)+'%</span>';
       const dlab=m.isDerived?' <span style="font-size:9px;color:#1e40af">[derived]</span>':'';
       predH+='<li>'+tag+' <strong>'+m.attr+'</strong>'+dlab+' ('+m.region+'): '+
              fmtNum(m.lastVal)+' → '+fmtNum(m.nextVal)+' '+m.unit+
              ' <span style="font-size:10px;color:#aaa">('+m.method+')</span></li>';
     });
-    const grainNote=currentData.isGrain?' Grains: EndStocks=Sup−DomTot−Exp−Unacc; WorldSup=BS+Prod.':'';
-    predH+='</ul><p class="model-note">Non-derived: blended regression+6yr history.'+grainNote+
-           ' '+NR_MONTH+'. Directional only.</p>';
+    predH+='</ul><p class="model-note">Ending Stocks formula is learned from actual data per commodity/region. '+NR_MONTH+'. Directional only.</p>';
   }
   document.getElementById('prediction-text').innerHTML=predH;
 }
@@ -761,9 +860,7 @@ function buildPredictionPanel(region){
   let h='<ul style="padding-left:1rem;list-style:disc">';
   bigMoves.slice(0,6).forEach(m=>{
     const sign=m.pct>=0?'+':'';
-    const tag=m.pct>0
-      ?'<span class="tag-up">'+sign+m.pct.toFixed(1)+'%</span>'
-      :'<span class="tag-dn">'+m.pct.toFixed(1)+'%</span>';
+    const tag=m.pct>0?'<span class="tag-up">'+sign+m.pct.toFixed(1)+'%</span>':'<span class="tag-dn">'+m.pct.toFixed(1)+'%</span>';
     const dlab=m.isDerived?' <span style="font-size:9px;color:#1e40af">[derived]</span>':'';
     h+='<li style="font-size:12px;line-height:1.8">'+tag+' <strong>'+m.attr+'</strong>'+dlab+': '+
        fmtNum(m.lastVal)+' → '+fmtNum(m.nextVal)+' '+m.unit+
@@ -784,8 +881,7 @@ function renderCustomPrediction(n){
 // ── Chart ─────────────────────────────────────────────────────
 function buildPills(years){
   document.getElementById('mkt-pills').innerHTML=years.map(y=>
-    '<button class="pill '+(activeYears.has(y)?'active':'')+
-    '" onclick="toggleYear(\''+y+'\',this)">'+y+'</button>'
+    '<button class="pill '+(activeYears.has(y)?'active':'')+'" onclick="toggleYear(\''+y+'\',this)">'+y+'</button>'
   ).join('');
 }
 function toggleYear(year,el){
