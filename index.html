@@ -459,6 +459,7 @@ async function onCommodityChange(){
   buildPills(currentData.marketYears);
 
   for(let i=0;i<8;i++) renderTable(i);
+  hideEmptyRows();
   renderSummaryAndPrediction();
   renderChart();
 
@@ -775,6 +776,42 @@ function buildTable(region, tableType){
   return h;
 }
 
+// Check if a region has any meaningful data (at least 1 key in data object)
+function regionHasData(region){
+  if(!region||!currentData)return false;
+  const rLower=region.toLowerCase().replace(/\s+/g,' ');
+  return Object.keys(currentData.data).some(k=>{
+    const parts=k.split('||');
+    return parts[0].toLowerCase().replace(/\s+/g,' ')===rLower;
+  });
+}
+
+// Hide entire table rows where both regions have no data;
+// hide individual cards where only one region has no data
+function hideEmptyRows(){
+  // Table slot → parent row class mapping
+  const rowMap=[
+    {slots:[0,1],rowClass:'row-1'},
+    {slots:[2,3],rowClass:'row-2'},
+    {slots:[4,5],rowClass:'row-3'},
+    {slots:[6,7],rowClass:'row-4'},
+  ];
+  rowMap.forEach(({slots,rowClass})=>{
+    const row=document.querySelector('.tables-row.'+rowClass);
+    if(!row)return;
+    let anyVisible=false;
+    slots.forEach(i=>{
+      const card=document.getElementById('tbl-'+i)?.closest('.table-card');
+      if(!card)return;
+      const hasData=regionHasData(tableRegions[i]);
+      card.style.display=hasData?'':'none';
+      if(hasData)anyVisible=true;
+    });
+    // Hide the entire row if no table in it has data
+    row.style.display=anyVisible?'':'none';
+  });
+}
+
 function renderTable(i){
   if(!currentData)return;
   // Slots 6 and 7 have dropdowns; 0-5 use fixed cached region
@@ -785,6 +822,8 @@ function renderTable(i){
   const region=tableRegions[i];
   const tt=tableTypeForIndex(i);
   document.getElementById('tbl-'+i).innerHTML=buildTable(region,tt);
+  // Re-evaluate visibility after each render
+  hideEmptyRows();
 }
 
 // ── Summary + prediction (World & US only) ───────────────────
