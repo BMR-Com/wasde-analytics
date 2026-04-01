@@ -8,6 +8,33 @@ DATA_DIR    = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 MASTER_PATH = os.environ.get("MASTER_CSV_PATH", "master_wasde.csv")
 
+# ── Known unit conversion factors ────────────────────────────
+UNIT_CONVERSIONS = {
+    ("thousand metric tons",   "million metric tons"):   0.001,
+    ("million metric tons",    "thousand metric tons"):  1000,
+    ("thousand bushels",       "million bushels"):       0.001,
+    ("million bushels",        "thousand bushels"):      1000,
+    ("thousand 480-lb bales",  "million 480-lb bales"):  0.001,
+    ("million 480-lb bales",   "thousand 480-lb bales"): 1000,
+    ("thousand short tons",    "million short tons"):    0.001,
+    ("million short tons",     "thousand short tons"):   1000,
+    ("thousand cwt",           "million cwt"):           0.001,
+    ("million cwt",            "thousand cwt"):          1000,
+    ("thousand hectares",      "million hectares"):      0.001,
+    ("million hectares",       "thousand hectares"):     1000,
+    ("thousand acres",         "million acres"):         0.001,
+    ("million acres",          "thousand acres"):        1000,
+}
+
+def normalize_unit(val, from_unit, to_unit):
+    fu = str(from_unit).strip().lower()
+    tu = str(to_unit).strip().lower()
+    if fu == tu:
+        return val
+    factor = UNIT_CONVERSIONS.get((fu, tu))
+    return val * factor if factor is not None else None
+
+# ── 1. Download CSV from GitHub Release ──────────────────────
 def download_from_release():
     import urllib.request
     repo  = os.environ["GITHUB_REPOSITORY"]
@@ -36,6 +63,7 @@ def download_from_release():
         f.write(r.read())
     print("Downloaded — " + str(Path(MASTER_PATH).stat().st_size//1024//1024) + " MB")
 
+# ── 2. Fetch & append latest WASDE month ─────────────────────
 def fetch_and_append():
     from curl_cffi import requests as cf
 
@@ -47,7 +75,8 @@ def fetch_and_append():
     for _ in range(4):
         y = check.strftime("%Y")
         m = check.strftime("%m")
-        url = "https://www.usda.gov/sites/default/files/documents/oce-wasde-report-data-" + y + "-" + m + ".csv"
+        url = ("https://www.usda.gov/sites/default/files/documents/"
+               "oce-wasde-report-data-" + y + "-" + m + ".csv")
         print("Checking " + y + "-" + m + "...", end=" ")
         try:
             r = cf.get(url, impersonate="chrome120", timeout=60)
@@ -76,6 +105,7 @@ def fetch_and_append():
         check -= relativedelta(months=1)
     return False
 
+# ── 3. Upload updated CSV back to GitHub Release ─────────────
 def upload_to_release():
     import urllib.request
     repo  = os.environ["GITHUB_REPOSITORY"]
@@ -105,7 +135,8 @@ def upload_to_release():
             break
 
     size = Path(MASTER_PATH).stat().st_size
-    upload_url = "https://uploads.github.com/repos/" + repo + "/releases/" + str(release_id) + "/assets?name=" + fname
+    upload_url = ("https://uploads.github.com/repos/" + repo +
+                  "/releases/" + str(release_id) + "/assets?name=" + fname)
     print("Uploading updated CSV (" + str(size//1024//1024) + " MB)...")
     with open(MASTER_PATH, "rb") as f:
         data = f.read()
@@ -117,38 +148,65 @@ def upload_to_release():
     urllib.request.urlopen(up_req)
     print("Uploaded " + fname + " to release")
 
+# ── 4. Generate commodity JSONs with unit normalization ───────
 def generate_jsons():
     print("\nGenerating JSONs...")
     df = pd.read_csv(MASTER_PATH, low_memory=False)
-    df = df.dropna(subset=["Commodity","Region","Attribute",
-                            "MarketYear","Value","WasdeNumber"])
+    df = df.dropna(subset=["Commodity","Region","Attribute","MarketYear","Value","WasdeNumber"])
     df["WasdeNumber"] = pd.to_numeric(df["WasdeNumber"], errors="coerce")
     df["Value"]       = pd.to_numeric(df["Value"],       errors="coerce")
+    df["Unit"]        = df["Unit"].fillna("").astype(str).str.strip()
     df = df.dropna(subset=["WasdeNumber","Value"])
 
     manifest = []
     for commodity in sorted(df["Commodity"].unique()):
-        cdf  = df[df["Commodity"] == commodity]
+        cdf = df[df["Commodity"] == commodity].copy()
         data = {}
+
+        # Dominant unit per (Region, Attribute) = canonical
+        unit_map = {}
+        for (region, attribute), grp in cdf.groupby(["Region","Attribute"]):
+            key_norm = (region, attribute.strip().lower())
+            unit_counts = grp["Unit"].value_counts()
+            unit_map[key_norm] = unit_counts.idxmax() if len(unit_counts) else ""
+
         for (region, attribute, mkt_year), grp in cdf.groupby(
                 ["Region","Attribute","MarketYear"]):
+            key_norm  = (region, attribute.strip().lower())
+            canonical = unit_map.get(key_norm, "")
             grp = grp.sort_values("WasdeNumber").reset_index(drop=True)
             grp["releaseNum"] = range(1, len(grp)+1)
-            key = region + "||" + attribute + "||" + mkt_year
-            data[key] = [
-                {
+
+            rows = []
+            for _, row in grp.iterrows():
+                raw_val  = float(row["Value"])
+                row_unit = str(row["Unit"]).strip()
+                norm_val = normalize_unit(raw_val, row_unit, canonical)
+                if norm_val is None:
+                    norm_val  = raw_val
+                    used_unit = row_unit
+                else:
+                    used_unit = canonical
+
+                rows.append({
                     "releaseNum":    int(row["releaseNum"]),
                     "wasdeNum":      int(row["WasdeNumber"]),
                     "reportDate":    str(row.get("ReportDate", "")),
-                    "value":         round(float(row["Value"]), 4),
+                    "value":         round(norm_val, 4),
                     "forecastYear":  int(row["ForecastYear"])
                                      if pd.notna(row.get("ForecastYear")) else None,
                     "forecastMonth": int(row["ForecastMonth"])
                                      if pd.notna(row.get("ForecastMonth")) else None,
-                    "unit":          str(row.get("Unit", ""))
-                }
-                for _, row in grp.iterrows()
-            ]
+                    "unit":          used_unit
+                })
+
+            key = region + "||" + attribute + "||" + mkt_year
+            data[key] = rows
+
+        # Unit display map for frontend
+        unit_display = {}
+        for (region, attr), unit in unit_map.items():
+            unit_display[region + "||" + attr] = unit
 
         fname = commodity.replace("/","-").replace(" ","_") + ".json"
         out = {
@@ -156,6 +214,7 @@ def generate_jsons():
             "regions":     sorted(cdf["Region"].unique().tolist()),
             "attributes":  sorted(cdf["Attribute"].unique().tolist()),
             "marketYears": sorted(cdf["MarketYear"].unique().tolist()),
+            "unitMap":     unit_display,
             "data":        data,
             "lastUpdated": datetime.utcnow().strftime("%Y-%m-%d")
         }
@@ -171,6 +230,7 @@ def generate_jsons():
                    "lastUpdated": datetime.utcnow().strftime("%Y-%m-%d")}, f)
     print(str(len(manifest)) + " JSONs written to /data/")
 
+# ── Main ─────────────────────────────────────────────────────
 mode = sys.argv[1] if len(sys.argv) > 1 else "full"
 
 if mode == "json-from-release":
