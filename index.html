@@ -27,7 +27,7 @@ select.wide{min-width:200px}
 
 .table-card{background:#fff;border:1px solid #e5e5e0;border-radius:8px;overflow:hidden}
 .tc-head{background:#1a2e1a;color:#fff;padding:.4rem .75rem;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:space-between;gap:.4rem;flex-wrap:wrap}
-.tc-head select{background:#2a4a2a;color:#fff;border:1px solid #3a6a3a;border-radius:4px;padding:2px 5px;font-size:10px;cursor:pointer;max-width:160px}
+.tc-head select{background:#2a4a2a;color:#fff;border:1px solid #3a6a3a;border-radius:4px;padding:2px 5px;font-size:10px;cursor:pointer;max-width:100%;width:100%}
 .tc-head select option{background:#1a2e1a}
 .tbl-scroll{overflow-x:auto}
 table.bs{width:100%;border-collapse:collapse;font-size:10px}
@@ -187,50 +187,54 @@ table.bs tr:last-child td{border-bottom:none}
 
   <div class="sec-title">Balance Sheet — Last 2 Releases × 3 Latest Marketing Years</div>
 
-  <!-- Row 1: World + USA -->
+  <!-- Row 1: World + USA (fixed, no dropdown) -->
   <div class="tables-row row-1">
     <div class="table-card">
-      <div class="tc-head"><span>World</span><select id="sel-t0" onchange="renderTable(0)"></select></div>
+      <div class="tc-head"><span>World</span></div>
       <div id="tbl-0"><div class="spinner">Loading...</div></div>
     </div>
     <div class="table-card">
-      <div class="tc-head"><span>United States</span><select id="sel-t1" onchange="renderTable(1)"></select></div>
+      <div class="tc-head"><span>United States</span></div>
       <div id="tbl-1"><div class="spinner">Loading...</div></div>
     </div>
   </div>
 
-  <!-- Row 2: Brazil + China -->
+  <!-- Row 2: Brazil + China (fixed, no dropdown) -->
   <div class="tables-row row-2">
     <div class="table-card">
-      <div class="tc-head"><span>Brazil</span><select id="sel-t2" onchange="renderTable(2)"></select></div>
+      <div class="tc-head"><span>Brazil</span></div>
       <div id="tbl-2"><div class="spinner">Loading...</div></div>
     </div>
     <div class="table-card">
-      <div class="tc-head"><span>China</span><select id="sel-t3" onchange="renderTable(3)"></select></div>
+      <div class="tc-head"><span>China</span></div>
       <div id="tbl-3"><div class="spinner">Loading...</div></div>
     </div>
   </div>
 
-  <!-- Row 3: World less China + India -->
+  <!-- Row 3: World less China + India (fixed, no dropdown) -->
   <div class="tables-row row-3">
     <div class="table-card">
-      <div class="tc-head"><span>World less China</span><select id="sel-t4" onchange="renderTable(4)"></select></div>
+      <div class="tc-head"><span>World less China</span></div>
       <div id="tbl-4"><div class="spinner">Loading...</div></div>
     </div>
     <div class="table-card">
-      <div class="tc-head"><span>India</span><select id="sel-t5" onchange="renderTable(5)"></select></div>
+      <div class="tc-head"><span>India</span></div>
       <div id="tbl-5"><div class="spinner">Loading...</div></div>
     </div>
   </div>
 
-  <!-- Row 4: EU + Russia -->
+  <!-- Row 4: Custom (dropdown only, label updates from selection) -->
   <div class="tables-row row-4">
     <div class="table-card">
-      <div class="tc-head"><span>European Union</span><select id="sel-t6" onchange="renderTable(6)"></select></div>
+      <div class="tc-head">
+        <select id="sel-t6" onchange="renderTable(6)"></select>
+      </div>
       <div id="tbl-6"><div class="spinner">Loading...</div></div>
     </div>
     <div class="table-card">
-      <div class="tc-head"><span>Russia</span><select id="sel-t7" onchange="renderTable(7)"></select></div>
+      <div class="tc-head">
+        <select id="sel-t7" onchange="renderTable(7)"></select>
+      </div>
       <div id="tbl-7"><div class="spinner">Loading...</div></div>
     </div>
   </div>
@@ -431,13 +435,19 @@ async function onCommodityChange(){
   const regions=currentData.regions;
   document.getElementById('sel-region').innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
 
-  // Set each table's select options and pick default region
+  // Set each table's region — first 6 fixed, last 2 have dropdowns
   for(let i=0;i<8;i++){
-    const sel=document.getElementById('sel-t'+i);
-    sel.innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
     const def=findRegionByKws(DEFAULT_REGIONS[i]);
     tableRegions[i]=def||regions[0];
-    if(def) sel.value=def;
+    // Only slots 6 and 7 have a select element
+    if(i>=6){
+      const sel=document.getElementById('sel-t'+i);
+      if(sel){
+        sel.innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
+        // Default to EU for 6, Russia for 7
+        if(def) sel.value=def;
+      }
+    }
   }
 
   const aSel=document.getElementById('sel-attribute');
@@ -767,9 +777,12 @@ function buildTable(region, tableType){
 
 function renderTable(i){
   if(!currentData)return;
-  const sel=document.getElementById('sel-t'+i);
-  const region=sel?sel.value:tableRegions[i];
-  tableRegions[i]=region;
+  // Slots 6 and 7 have dropdowns; 0-5 use fixed cached region
+  if(i>=6){
+    const sel=document.getElementById('sel-t'+i);
+    if(sel) tableRegions[i]=sel.value;
+  }
+  const region=tableRegions[i];
   const tt=tableTypeForIndex(i);
   document.getElementById('tbl-'+i).innerHTML=buildTable(region,tt);
 }
