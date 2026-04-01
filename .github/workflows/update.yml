@@ -3,13 +3,13 @@ name: Monthly WASDE update
 on:
   schedule:
     - cron: '0 20 12 * *'   # 12th of every month, 8pm UTC
-  workflow_dispatch:          # manual trigger anytime
+  workflow_dispatch:          # manual trigger from Actions tab
 
 jobs:
   update:
     runs-on: ubuntu-latest
     permissions:
-      contents: write         # needed to push JSONs + upload release assets
+      contents: write         # needed to push JSONs + manage release assets
 
     steps:
       - name: Checkout repo
@@ -23,11 +23,12 @@ jobs:
       - name: Install dependencies
         run: pip install pandas curl_cffi python-dateutil -q
 
-      - name: Run full pipeline
+      - name: Run pipeline
         env:
           GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: python process.py full
+        run: |
+          python process.py json-from-release
 
       - name: Commit & push updated JSONs
         run: |
