@@ -8,7 +8,7 @@ DATA_DIR    = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 MASTER_PATH = os.environ.get("MASTER_CSV_PATH", "master_wasde.csv")
 
-# ── Known unit conversion factors ────────────────────────────
+# All known conversion pairs (from → to): multiply value by factor
 UNIT_CONVERSIONS = {
     ("thousand metric tons",   "million metric tons"):   0.001,
     ("million metric tons",    "thousand metric tons"):  1000,
@@ -24,17 +24,27 @@ UNIT_CONVERSIONS = {
     ("million hectares",       "thousand hectares"):     1000,
     ("thousand acres",         "million acres"):         0.001,
     ("million acres",          "thousand acres"):        1000,
+    ("1,000 metric tons",      "1,000,000 metric tons"): 0.001,
+    ("1,000,000 metric tons",  "1,000 metric tons"):     1000,
+    ("1,000 bushels",          "1,000,000 bushels"):     0.001,
+    ("1,000,000 bushels",      "1,000 bushels"):         1000,
 }
 
 def normalize_unit(val, from_unit, to_unit):
     fu = str(from_unit).strip().lower()
     tu = str(to_unit).strip().lower()
-    if fu == tu:
+    if fu == tu or fu == "" or tu == "":
         return val
     factor = UNIT_CONVERSIONS.get((fu, tu))
-    return val * factor if factor is not None else None
+    if factor is not None:
+        return val * factor
+    # Try swapped (safety)
+    factor2 = UNIT_CONVERSIONS.get((tu, fu))
+    if factor2 is not None:
+        print(f"  WARN: unexpected direction {from_unit} → {to_unit}, using inverse")
+        return val / factor2
+    return None  # unknown — flag it
 
-# ── 1. Download CSV from GitHub Release ──────────────────────
 def download_from_release():
     import urllib.request
     repo  = os.environ["GITHUB_REPOSITORY"]
@@ -63,7 +73,6 @@ def download_from_release():
         f.write(r.read())
     print("Downloaded — " + str(Path(MASTER_PATH).stat().st_size//1024//1024) + " MB")
 
-# ── 2. Fetch & append latest WASDE month ─────────────────────
 def fetch_and_append():
     from curl_cffi import requests as cf
 
@@ -105,7 +114,6 @@ def fetch_and_append():
         check -= relativedelta(months=1)
     return False
 
-# ── 3. Upload updated CSV back to GitHub Release ─────────────
 def upload_to_release():
     import urllib.request
     repo  = os.environ["GITHUB_REPOSITORY"]
@@ -148,7 +156,6 @@ def upload_to_release():
     urllib.request.urlopen(up_req)
     print("Uploaded " + fname + " to release")
 
-# ── 4. Generate commodity JSONs with unit normalization ───────
 def generate_jsons():
     print("\nGenerating JSONs...")
     df = pd.read_csv(MASTER_PATH, low_memory=False)
@@ -159,17 +166,25 @@ def generate_jsons():
     df = df.dropna(subset=["WasdeNumber","Value"])
 
     manifest = []
+    warn_count = 0
+
     for commodity in sorted(df["Commodity"].unique()):
         cdf = df[df["Commodity"] == commodity].copy()
         data = {}
 
-        # Dominant unit per (Region, Attribute) = canonical
+        # ── Per (Region, Attribute): find canonical unit ──────
+        # Use the unit from the MOST RECENT releases (highest WasdeNumber)
+        # to avoid old-format units dominating
         unit_map = {}
         for (region, attribute), grp in cdf.groupby(["Region","Attribute"]):
             key_norm = (region, attribute.strip().lower())
-            unit_counts = grp["Unit"].value_counts()
-            unit_map[key_norm] = unit_counts.idxmax() if len(unit_counts) else ""
+            # Get unit from the most recent 20 releases
+            recent = grp.nlargest(20, "WasdeNumber")
+            unit_counts = recent["Unit"].value_counts()
+            canonical   = unit_counts.idxmax() if len(unit_counts) else ""
+            unit_map[key_norm] = canonical
 
+        # ── Build normalized series ───────────────────────────
         for (region, attribute, mkt_year), grp in cdf.groupby(
                 ["Region","Attribute","MarketYear"]):
             key_norm  = (region, attribute.strip().lower())
@@ -182,9 +197,15 @@ def generate_jsons():
                 raw_val  = float(row["Value"])
                 row_unit = str(row["Unit"]).strip()
                 norm_val = normalize_unit(raw_val, row_unit, canonical)
+
                 if norm_val is None:
+                    # Unknown conversion — keep raw and log
                     norm_val  = raw_val
                     used_unit = row_unit
+                    warn_count += 1
+                    if warn_count <= 20:
+                        print(f"  WARN unit: [{row_unit}] → [{canonical}] "
+                              f"({commodity}/{region}/{attribute})")
                 else:
                     used_unit = canonical
 
@@ -203,7 +224,7 @@ def generate_jsons():
             key = region + "||" + attribute + "||" + mkt_year
             data[key] = rows
 
-        # Unit display map for frontend
+        # Unit display map (region||attr → canonical unit)
         unit_display = {}
         for (region, attr), unit in unit_map.items():
             unit_display[region + "||" + attr] = unit
@@ -229,8 +250,9 @@ def generate_jsons():
         json.dump({"commodities": manifest,
                    "lastUpdated": datetime.utcnow().strftime("%Y-%m-%d")}, f)
     print(str(len(manifest)) + " JSONs written to /data/")
+    if warn_count > 0:
+        print("Total unknown unit conversions: " + str(warn_count))
 
-# ── Main ─────────────────────────────────────────────────────
 mode = sys.argv[1] if len(sys.argv) > 1 else "full"
 
 if mode == "json-from-release":
