@@ -6,33 +6,59 @@
 <title>WASDE Analytics</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
-  header{background:#1a2e1a;color:#fff;padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between}
-  header h1{font-size:1.2rem;font-weight:500;letter-spacing:-.01em}
-  #last-updated{font-size:12px;opacity:.6}
-  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;padding:1.25rem 2rem;background:#fff;border-bottom:1px solid #e5e5e0}
-  .ctrl label{display:block;font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
-  select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff;appearance:none;cursor:pointer}
-  .mkt-year-wrap{padding:.75rem 2rem;background:#fafaf8;border-bottom:1px solid #e5e5e0}
-  .mkt-year-wrap label{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px}
-  .pills{display:flex;flex-wrap:wrap;gap:6px}
-  .pill{padding:4px 12px;border-radius:99px;font-size:12px;cursor:pointer;border:1px solid #ccc;background:#fff;transition:all .15s}
-  .pill.active{background:#1a2e1a;color:#fff;border-color:#1a2e1a}
-  .chart-wrap{padding:1.5rem 2rem;max-width:1100px;margin:0 auto}
-  #chart-container{background:#fff;border-radius:10px;padding:1.25rem;border:1px solid #e5e5e0;position:relative;min-height:420px}
-  #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#888;background:#fff;border-radius:10px;z-index:10}
-  .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1rem}
-  .stat{background:#f5f5f3;border-radius:7px;padding:.75rem 1rem;text-align:center}
-  .stat-n{font-size:20px;font-weight:500;color:#1a2e1a}
-  .stat-l{font-size:11px;color:#888;margin-top:2px}
-  #no-data{display:none;text-align:center;padding:3rem;color:#aaa;font-size:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
+header{background:#1a2e1a;color:#fff;padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+header h1{font-size:1.1rem;font-weight:500}
+#last-updated{font-size:11px;opacity:.6}
+.controls{display:flex;gap:16px;padding:1rem 2rem;background:#fff;border-bottom:1px solid #e5e5e0;flex-wrap:wrap;align-items:flex-end}
+.ctrl label{display:block;font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+select{padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff;min-width:200px;cursor:pointer}
+.section{padding:1.5rem 2rem;max-width:1400px;margin:0 auto}
+.section-title{font-size:12px;font-weight:600;color:#1a2e1a;margin-bottom:1rem;text-transform:uppercase;letter-spacing:.08em;border-left:3px solid #1a2e1a;padding-left:.6rem}
+.tables-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
+@media(max-width:960px){.tables-wrap{grid-template-columns:1fr}}
+.table-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;overflow:hidden}
+.table-card-title{background:#1a2e1a;color:#fff;padding:.55rem 1rem;font-size:12px;font-weight:500;letter-spacing:.04em}
+.tbl-scroll{overflow-x:auto}
+table.bs{width:100%;border-collapse:collapse;font-size:11.5px}
+table.bs th{background:#f5f5f3;padding:5px 7px;text-align:center;font-weight:500;color:#555;border-bottom:1px solid #e5e5e0;white-space:nowrap}
+table.bs th.ac{text-align:left;min-width:140px}
+table.bs th.yg{background:#edf2ed;color:#1a2e1a;font-size:11px;border-bottom:1px solid #c8d8c8}
+table.bs th.pg{background:#fff8e6;color:#7a5000;font-size:11px;border-bottom:1px solid #e8d8a0}
+table.bs td{padding:4px 7px;border-bottom:1px solid #f0f0ee;text-align:right;white-space:nowrap}
+table.bs td.an{text-align:left;color:#333;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+table.bs tr:last-child td{border-bottom:none}
+table.bs tr:hover td{background:#fafaf8}
+.up{color:#166534}.dn{color:#991b1b}
+.chg{font-size:9.5px}
+.pv{background:#fffbf0;color:#7a5000;font-weight:500}
+.summary-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:1.25rem;margin-bottom:1.25rem}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:.75rem}
+@media(max-width:700px){.summary-grid{grid-template-columns:1fr}}
+.sb h4{font-size:11px;font-weight:600;color:#1a2e1a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;border-bottom:1px solid #e5e5e0;padding-bottom:.4rem}
+.sb ul{padding-left:1rem;list-style:disc}
+.sb li{font-size:12px;line-height:1.8;color:#333;margin-bottom:1px}
+.sb p{font-size:12px;line-height:1.7;color:#444}
+.tag-up{display:inline-block;background:#dcfce7;color:#166534;border-radius:3px;padding:0 5px;font-size:10px;font-weight:600;margin-right:2px}
+.tag-dn{display:inline-block;background:#fee2e2;color:#991b1b;border-radius:3px;padding:0 5px;font-size:10px;font-weight:600;margin-right:2px}
+.tag-nc{display:inline-block;background:#f3f4f6;color:#555;border-radius:3px;padding:0 5px;font-size:10px;margin-right:2px}
+.model-note{font-size:10px;color:#aaa;margin-top:.75rem;line-height:1.6}
+.chart-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
+.chart-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:1rem}
+.chart-controls select{min-width:160px}
+.pills-label{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
+.pill{padding:3px 10px;border-radius:99px;font-size:11px;cursor:pointer;border:1px solid #ccc;background:#fff;transition:all .12s}
+.pill.active{background:#1a2e1a;color:#fff;border-color:#1a2e1a}
+#chart-container{position:relative;height:380px}
+.spinner{text-align:center;padding:2.5rem;color:#aaa;font-size:13px}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>WASDE Analytics — Forecast Evolution</h1>
+  <h1>WASDE Analytics Dashboard</h1>
   <span id="last-updated"></span>
 </header>
 
@@ -41,94 +67,418 @@
     <label>Commodity</label>
     <select id="sel-commodity" onchange="onCommodityChange()"><option>Loading...</option></select>
   </div>
-  <div class="ctrl">
-    <label>Region</label>
-    <select id="sel-region" onchange="renderChart()"><option>All</option></select>
-  </div>
-  <div class="ctrl">
-    <label>Attribute</label>
-    <select id="sel-attribute" onchange="renderChart()"><option>Ending Stocks</option></select>
+  <div style="font-size:12px;color:#888;align-self:center;padding-top:14px">
+    All sections update when you change the commodity
   </div>
 </div>
 
-<div class="mkt-year-wrap">
-  <label>Marketing Years (click to toggle — compare multiple years)</label>
-  <div class="pills" id="mkt-pills"></div>
-</div>
+<div class="section">
 
-<div class="chart-wrap">
-  <div class="stats-bar">
-    <div class="stat"><div class="stat-n" id="st-years">—</div><div class="stat-l">years shown</div></div>
-    <div class="stat"><div class="stat-n" id="st-releases">—</div><div class="stat-l">max releases</div></div>
-    <div class="stat"><div class="stat-n" id="st-unit">—</div><div class="stat-l">unit</div></div>
-    <div class="stat"><div class="stat-n" id="st-updated">—</div><div class="stat-l">last updated</div></div>
+  <!-- BALANCE SHEETS -->
+  <div class="section-title">Balance Sheet — Last 2 Releases &times; 3 Latest Marketing Years</div>
+  <div class="tables-wrap">
+    <div class="table-card">
+      <div class="table-card-title">World</div>
+      <div id="world-table"><div class="spinner">Loading...</div></div>
+    </div>
+    <div class="table-card">
+      <div class="table-card-title">United States</div>
+      <div id="us-table"><div class="spinner">Loading...</div></div>
+    </div>
   </div>
-  <div id="chart-container">
-    <div id="loading">Loading data...</div>
-    <div id="no-data">No data for this selection</div>
-    <canvas id="myChart"></canvas>
+
+  <!-- SUMMARY + PREDICTION -->
+  <div class="summary-card">
+    <div class="section-title" style="margin-bottom:0">Analysis &amp; Prediction</div>
+    <div class="summary-grid">
+      <div class="sb">
+        <h4>Key changes — last 2 reports</h4>
+        <div id="summary-text"><div class="spinner">Loading...</div></div>
+      </div>
+      <div class="sb">
+        <h4>Next release prediction</h4>
+        <div id="prediction-text"><div class="spinner">Loading...</div></div>
+      </div>
+    </div>
   </div>
+
+  <!-- CHART -->
+  <div class="chart-card">
+    <div class="section-title">Forecast Evolution Chart</div>
+    <div class="chart-controls">
+      <div class="ctrl">
+        <label>Region</label>
+        <select id="sel-region" onchange="renderChart()"></select>
+      </div>
+      <div class="ctrl">
+        <label>Attribute</label>
+        <select id="sel-attribute" onchange="renderChart()"></select>
+      </div>
+    </div>
+    <div class="pills-label">Marketing Years (toggle to compare)</div>
+    <div class="pills" id="mkt-pills"></div>
+    <div id="chart-container"><canvas id="myChart"></canvas></div>
+  </div>
+
 </div>
 
 <script>
-const BASE = './data';
-const COLORS = [
-  '#2563eb','#dc2626','#16a34a','#d97706','#7c3aed',
-  '#0891b2','#be185d','#65a30d','#ea580c','#6d28d9',
-  '#0d9488','#b45309','#1d4ed8','#15803d','#c2410c'
-];
+const BASE   = './data';
+const COLORS = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed',
+                '#0891b2','#be185d','#65a30d','#ea580c','#6d28d9',
+                '#0d9488','#b45309','#1d4ed8','#15803d','#c2410c'];
 
-let manifest = null;
-let currentData = null;
-let chart = null;
+let manifest = null, currentData = null, chart = null;
 let activeYears = new Set();
 
 // ── Boot ──────────────────────────────────────────────────────
 async function boot() {
-  const res  = await fetch(`${BASE}/manifest.json`);
-  manifest   = await res.json();
-  document.getElementById('last-updated').textContent = 'Updated: ' + manifest.lastUpdated;
-  document.getElementById('st-updated').textContent   = manifest.lastUpdated;
-
-  const sel = document.getElementById('sel-commodity');
-  sel.innerHTML = manifest.commodities
-    .map(c => `<option value="${c.file}">${c.commodity}</option>`).join('');
-  await onCommodityChange();
+  try {
+    const res = await fetch(BASE + '/manifest.json');
+    manifest  = await res.json();
+    document.getElementById('last-updated').textContent =
+      'Updated: ' + manifest.lastUpdated;
+    const sel = document.getElementById('sel-commodity');
+    sel.innerHTML = manifest.commodities
+      .map(c => '<option value="' + c.file + '">' + c.commodity + '</option>').join('');
+    await onCommodityChange();
+  } catch(e) {
+    document.getElementById('world-table').innerHTML =
+      '<div class="spinner">Error loading data: ' + e.message + '</div>';
+  }
 }
 
 async function onCommodityChange() {
-  showLoading(true);
+  setAllLoading();
   const file = document.getElementById('sel-commodity').value;
-  const res  = await fetch(`${BASE}/${file}`);
+  const res  = await fetch(BASE + '/' + file);
   currentData = await res.json();
 
-  // Populate region
+  // Chart selects
   const rSel = document.getElementById('sel-region');
-  rSel.innerHTML = ['All', ...currentData.regions].map(r => `<option>${r}</option>`).join('');
-
-  // Populate attribute — try to default to Ending Stocks
+  rSel.innerHTML = currentData.regions
+    .map(r => '<option>' + r + '</option>').join('');
   const aSel = document.getElementById('sel-attribute');
-  aSel.innerHTML = currentData.attributes.map(a => `<option>${a}</option>`).join('');
-  const esIdx = currentData.attributes.findIndex(a => a.toLowerCase().includes('ending'));
+  aSel.innerHTML = currentData.attributes
+    .map(a => '<option>' + a + '</option>').join('');
+  const esIdx = currentData.attributes
+    .findIndex(a => a.toLowerCase().includes('ending'));
   if (esIdx >= 0) aSel.selectedIndex = esIdx;
 
-  // Default active years: last 5
-  const allYears = currentData.marketYears;
-  activeYears = new Set(allYears.slice(-5));
-  buildPills(allYears);
+  activeYears = new Set(currentData.marketYears.slice(-5));
+  buildPills(currentData.marketYears);
+
+  renderBalanceSheets();
+  renderSummaryAndPrediction();
   renderChart();
 }
 
+function setAllLoading() {
+  ['world-table','us-table','summary-text','prediction-text'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="spinner">Loading...</div>';
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function fmtNum(v) {
+  if (v === null || v === undefined) return '—';
+  const n = parseFloat(v);
+  if (isNaN(n)) return '—';
+  return n.toLocaleString(undefined, {maximumFractionDigits:2});
+}
+
+function getSeries(region, attr, mktYear) {
+  const key = region + '||' + attr + '||' + mktYear;
+  return (currentData.data[key] || []).sort((a,b) => a.releaseNum - b.releaseNum);
+}
+
+function findRegion(keywords) {
+  const kws = keywords.map(k => k.toLowerCase());
+  return currentData.regions.find(r =>
+    kws.some(k => r.toLowerCase().includes(k))
+  ) || null;
+}
+
+function getLastNWasdeNums(n) {
+  const nums = new Set();
+  Object.values(currentData.data).forEach(arr =>
+    arr.forEach(d => nums.add(d.wasdeNum)));
+  return [...nums].sort((a,b) => b-a).slice(0,n).sort((a,b) => a-b);
+}
+
+function getLatestNMktYears(n) {
+  return [...currentData.marketYears].sort().slice(-n);
+}
+
+// ── Linear Regression ─────────────────────────────────────────
+function linReg(xs, ys) {
+  const n = xs.length;
+  if (n < 2) return null;
+  const mx = xs.reduce((a,b)=>a+b,0)/n;
+  const my = ys.reduce((a,b)=>a+b,0)/n;
+  const num = xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0);
+  const den = xs.reduce((s,x)=>s+(x-mx)**2,0);
+  if (den === 0) return null;
+  const b = num/den, a = my - b*mx;
+  return { a, b, predict: x => a + b*x };
+}
+
+// ── Prediction model (blend regression + historical MoM) ──────
+function fitPrediction(region, attr, mktYear) {
+  const series = getSeries(region, attr, mktYear);
+  if (series.length < 2) return null;
+
+  const xs    = series.map(d => d.releaseNum);
+  const ys    = series.map(d => d.value);
+  const nextX = Math.max(...xs) + 1;
+  const lm    = linReg(xs, ys);
+  if (!lm) return null;
+
+  let regPred = lm.predict(nextX);
+  const lastVal = ys[ys.length - 1];
+
+  // Historical month-over-month change at same release number
+  const prevYears = currentData.marketYears
+    .filter(y => y !== mktYear && y < mktYear).slice(-6);
+  const momChanges = [];
+  prevYears.forEach(py => {
+    const ps   = getSeries(region, attr, py);
+    const atN  = ps.find(d => d.releaseNum === xs[xs.length-1]);
+    const atN1 = ps.find(d => d.releaseNum === nextX);
+    if (atN && atN1) momChanges.push(atN1.value - atN.value);
+  });
+
+  let nextVal = regPred;
+  let method  = 'linear regression';
+  if (momChanges.length >= 2) {
+    const avgMom = momChanges.reduce((a,b)=>a+b,0) / momChanges.length;
+    nextVal = 0.5 * regPred + 0.5 * (lastVal + avgMom);
+    method  = 'blended (regression + ' + momChanges.length + 'yr history)';
+  }
+
+  return {
+    nextVal: Math.round(nextVal * 100) / 100,
+    lastVal, nextX, method,
+    momCount: momChanges.length
+  };
+}
+
+// ── Build one balance sheet table ─────────────────────────────
+function buildBalanceSheet(region) {
+  if (!region) return '<div class="spinner" style="color:#c00">Region not found in this commodity\'s data</div>';
+
+  const last2W   = getLastNWasdeNums(2);
+  const last3Y   = getLatestNMktYears(3);
+  const currentY = last3Y[last3Y.length - 1];
+  const attrs    = currentData.attributes;
+
+  // Get report date labels for the 2 wasde numbers
+  const wLabels = {};
+  last2W.forEach(wn => {
+    for (const arr of Object.values(currentData.data)) {
+      const f = arr.find(d => d.wasdeNum === wn);
+      if (f) { wLabels[wn] = f.reportDate || ('W' + wn); break; }
+    }
+  });
+
+  let h = '<div class="tbl-scroll"><table class="bs"><thead>';
+
+  // Row 1 — year group headers
+  h += '<tr><th class="ac" rowspan="2">Attribute</th>';
+  last3Y.forEach(yr => {
+    h += '<th class="yg" colspan="' + last2W.length + '">' + yr + '</th>';
+  });
+  h += '<th class="pg" rowspan="2" style="min-width:80px">Next Release<br><span style="font-weight:400;font-size:10px">Prediction</span><br><span style="font-weight:400;font-size:10px">(' + currentY + ')</span></th>';
+  h += '</tr>';
+
+  // Row 2 — date sub-headers
+  h += '<tr>';
+  last3Y.forEach(() => {
+    last2W.forEach(wn => {
+      h += '<th style="font-size:10px;font-weight:400;color:#777">' +
+           (wLabels[wn] || ('W' + wn)) + '</th>';
+    });
+  });
+  h += '</tr></thead><tbody>';
+
+  // Data rows
+  attrs.forEach(attr => {
+    h += '<tr><td class="an" title="' + attr + '">' + attr + '</td>';
+
+    last3Y.forEach((yr, yi) => {
+      const series  = getSeries(region, attr, yr);
+      const byWasde = {};
+      series.forEach(d => { byWasde[d.wasdeNum] = d; });
+
+      last2W.forEach((wn, wi) => {
+        const entry = byWasde[wn];
+        const val   = entry ? entry.value : null;
+        const prevW = wi > 0 ? byWasde[last2W[wi-1]] : null;
+        const prev  = prevW ? prevW.value : null;
+
+        let cell = val !== null ? fmtNum(val) : '—';
+        let chg  = '';
+        if (val !== null && prev !== null && prev !== 0) {
+          const pct = ((val - prev) / Math.abs(prev)) * 100;
+          if (Math.abs(pct) >= 0.05) {
+            const cls  = pct > 0 ? 'up' : 'dn';
+            const sign = pct > 0 ? '+' : '';
+            chg = '<br><span class="chg ' + cls + '">' + sign + pct.toFixed(1) + '%</span>';
+          }
+        }
+        h += '<td>' + cell + chg + '</td>';
+      });
+    });
+
+    // Prediction cell (for current year only)
+    const model = fitPrediction(region, attr, currentY);
+    if (model) {
+      const diff = model.nextVal - model.lastVal;
+      const pct  = model.lastVal !== 0 ? (diff / Math.abs(model.lastVal)) * 100 : 0;
+      const sign = diff >= 0 ? '+' : '';
+      const cls  = diff > 0 ? 'up' : diff < 0 ? 'dn' : '';
+      h += '<td class="pv">' + fmtNum(model.nextVal) +
+           (Math.abs(pct) >= 0.05
+             ? '<br><span class="chg ' + cls + '">' + sign + pct.toFixed(1) + '%</span>'
+             : '') + '</td>';
+    } else {
+      h += '<td class="pv">—</td>';
+    }
+
+    h += '</tr>';
+  });
+
+  h += '</tbody></table></div>';
+  return h;
+}
+
+// ── Render both tables ────────────────────────────────────────
+function renderBalanceSheets() {
+  const worldR = findRegion(['world']);
+  const usR    = findRegion(['united states','u.s.','us -','usa']);
+  document.getElementById('world-table').innerHTML = buildBalanceSheet(worldR);
+  document.getElementById('us-table').innerHTML    = buildBalanceSheet(usR);
+}
+
+// ── Rule-based summary + prediction narrative ─────────────────
+function renderSummaryAndPrediction() {
+  const last2W   = getLastNWasdeNums(2);
+  const last3Y   = getLatestNMktYears(3);
+  const currentY = last3Y[last3Y.length - 1];
+  const worldR   = findRegion(['world']);
+  const usR      = findRegion(['united states','u.s.','us -','usa']);
+
+  if (last2W.length < 2) {
+    document.getElementById('summary-text').innerHTML =
+      '<p>Need at least 2 releases to compare.</p>';
+    document.getElementById('prediction-text').innerHTML =
+      '<p>Need more data for predictions.</p>';
+    return;
+  }
+
+  const w1 = last2W[0], w2 = last2W[1]; // w1 older, w2 newer
+
+  // Collect changes for current marketing year
+  const changes = [];
+  [worldR, usR].forEach(region => {
+    if (!region) return;
+    currentData.attributes.forEach(attr => {
+      const s    = getSeries(region, attr, currentY);
+      const prev = s.find(d => d.wasdeNum === w1);
+      const curr = s.find(d => d.wasdeNum === w2);
+      if (!prev || !curr || prev.value === 0) return;
+      const diff = curr.value - prev.value;
+      const pct  = (diff / Math.abs(prev.value)) * 100;
+      if (Math.abs(pct) >= 0.5) {
+        changes.push({region, attr, prev: prev.value, curr: curr.value,
+                      diff, pct, unit: curr.unit || ''});
+      }
+    });
+  });
+
+  changes.sort((a,b) => Math.abs(b.pct) - Math.abs(a.pct));
+
+  // Summary HTML
+  let sumH = '';
+  if (!changes.length) {
+    sumH = '<p>No significant changes (&ge;0.5%) between the last two releases for ' +
+           currentY + '.</p>';
+  } else {
+    const top = changes.slice(0, 8);
+    const ups = top.filter(c => c.diff > 0).length;
+    const dns = top.filter(c => c.diff < 0).length;
+    sumH = '<p style="font-size:12px;color:#555;margin-bottom:.6rem">' +
+           currentY + ' marketing year: <strong>' + ups + '</strong> attributes revised up, <strong>' +
+           dns + '</strong> revised down in the latest report.</p><ul>';
+    top.forEach(c => {
+      const tag = c.diff > 0
+        ? '<span class="tag-up">+' + c.pct.toFixed(1) + '%</span>'
+        : '<span class="tag-dn">' + c.pct.toFixed(1) + '%</span>';
+      sumH += '<li>' + tag + ' <strong>' + c.attr + '</strong> (' +
+              c.region + '): ' + fmtNum(c.prev) + ' → ' + fmtNum(c.curr) +
+              ' ' + c.unit + '</li>';
+    });
+    sumH += '</ul>';
+    if (changes.length > 8) {
+      sumH += '<p style="font-size:11px;color:#888;margin-top:.4rem">+' +
+              (changes.length - 8) + ' more smaller changes</p>';
+    }
+  }
+  document.getElementById('summary-text').innerHTML = sumH;
+
+  // Prediction narrative
+  const bigMoves = [];
+  [worldR, usR].forEach(region => {
+    if (!region) return;
+    currentData.attributes.forEach(attr => {
+      const model = fitPrediction(region, attr, currentY);
+      if (!model) return;
+      const pct = model.lastVal !== 0
+        ? ((model.nextVal - model.lastVal) / Math.abs(model.lastVal)) * 100 : 0;
+      if (Math.abs(pct) >= 0.5) {
+        const s = getSeries(region, attr, currentY);
+        bigMoves.push({region, attr, lastVal: model.lastVal,
+                       nextVal: model.nextVal, pct, method: model.method,
+                       unit: s[s.length-1]?.unit || ''});
+      }
+    });
+  });
+
+  bigMoves.sort((a,b) => Math.abs(b.pct) - Math.abs(a.pct));
+
+  let predH = '';
+  if (!bigMoves.length) {
+    predH = '<p>Minimal changes expected in the next release based on historical patterns for ' + currentY + '.</p>';
+  } else {
+    const top = bigMoves.slice(0, 7);
+    predH = '<ul>';
+    top.forEach(m => {
+      const sign = m.pct >= 0 ? '+' : '';
+      const tag  = m.pct > 0
+        ? '<span class="tag-up">' + sign + m.pct.toFixed(1) + '%</span>'
+        : '<span class="tag-dn">' + m.pct.toFixed(1) + '%</span>';
+      predH += '<li>' + tag + ' <strong>' + m.attr + '</strong> (' + m.region +
+               '): ' + fmtNum(m.lastVal) + ' → ' + fmtNum(m.nextVal) +
+               ' ' + m.unit +
+               ' <span style="font-size:10px;color:#aaa">(' + m.method + ')</span></li>';
+    });
+    predH += '</ul>';
+    predH += '<p class="model-note">Predictions blend linear regression on the current year\'s release sequence with the average month-over-month change observed at the same release number across the last 6 marketing years. Treat as directional guidance only.</p>';
+  }
+  document.getElementById('prediction-text').innerHTML = predH;
+}
+
+// ── Forecast Evolution Chart ──────────────────────────────────
 function buildPills(years) {
-  const wrap = document.getElementById('mkt-pills');
-  wrap.innerHTML = years.map(y => `
-    <button class="pill ${activeYears.has(y)?'active':''}" onclick="toggleYear('${y}',this)">${y}</button>
-  `).join('');
+  document.getElementById('mkt-pills').innerHTML = years.map(y =>
+    '<button class="pill ' + (activeYears.has(y) ? 'active' : '') +
+    '" onclick="toggleYear(\'' + y + '\',this)">' + y + '</button>'
+  ).join('');
 }
 
 function toggleYear(year, el) {
   if (activeYears.has(year)) {
-    if (activeYears.size === 1) return; // keep at least 1
+    if (activeYears.size === 1) return;
     activeYears.delete(year);
     el.classList.remove('active');
   } else {
@@ -142,103 +492,54 @@ function renderChart() {
   if (!currentData) return;
   const region    = document.getElementById('sel-region').value;
   const attribute = document.getElementById('sel-attribute').value;
+  const datasets  = [];
+  let maxRel = 0, unit = '';
 
-  // Collect series for each active marketing year
-  const datasets = [];
-  let maxReleases = 0;
-  let unit = '';
-
-  const sortedYears = [...activeYears].sort();
-
-  sortedYears.forEach((mktYear, i) => {
-    // Try exact region first, else aggregate across regions if "All"
-    let points = [];
-    if (region === 'All') {
-      // Sum across all regions for this attribute + mkt year
-      const regionKeys = currentData.regions.map(r => `${r}||${attribute}||${mktYear}`);
-      const combined = {};
-      regionKeys.forEach(k => {
-        (currentData.data[k] || []).forEach(d => {
-          if (!combined[d.releaseNum]) combined[d.releaseNum] = {...d, value: 0};
-          combined[d.releaseNum].value += d.value;
-        });
-      });
-      points = Object.values(combined).sort((a,b) => a.releaseNum - b.releaseNum);
-    } else {
-      const key = `${region}||${attribute}||${mktYear}`;
-      points = (currentData.data[key] || []).sort((a,b) => a.releaseNum - b.releaseNum);
-    }
-
-    if (!points.length) return;
-    if (points[0]?.unit) unit = points[0].unit;
-    maxReleases = Math.max(maxReleases, points.length);
-
+  [...activeYears].sort().forEach((mktYear, i) => {
+    const series = getSeries(region, attribute, mktYear);
+    if (!series.length) return;
+    if (series[0].unit) unit = series[0].unit;
+    maxRel = Math.max(maxRel, series.length);
     datasets.push({
       label: mktYear,
-      data: points.map(p => ({ x: p.releaseNum, y: p.value, reportDate: p.reportDate, wasdeNum: p.wasdeNum })),
+      data: series.map(p => ({x: p.releaseNum, y: p.value,
+                               reportDate: p.reportDate, wasdeNum: p.wasdeNum})),
       borderColor: COLORS[i % COLORS.length],
       backgroundColor: COLORS[i % COLORS.length] + '18',
-      borderWidth: 2,
-      pointRadius: 3,
-      pointHoverRadius: 6,
-      tension: 0.3,
-      fill: false
+      borderWidth: 2, pointRadius: 3, pointHoverRadius: 6,
+      tension: 0.3, fill: false
     });
   });
 
-  // Update stats
-  document.getElementById('st-years').textContent    = datasets.length;
-  document.getElementById('st-releases').textContent = maxReleases;
-  document.getElementById('st-unit').textContent     = unit || '—';
-
-  const noData = document.getElementById('no-data');
-  const canvas = document.getElementById('myChart');
-  if (!datasets.length) {
-    noData.style.display = 'block';
-    canvas.style.display = 'none';
-    showLoading(false);
-    return;
-  }
-  noData.style.display = 'none';
-  canvas.style.display = 'block';
-
-  // Build x-axis labels
-  const xLabels = Array.from({length: maxReleases}, (_, i) => `Release ${i+1}`);
-
   if (chart) chart.destroy();
-  chart = new Chart(canvas, {
+  if (!datasets.length) return;
+
+  const labels = Array.from({length: maxRel}, (_, i) => 'Release ' + (i+1));
+  chart = new Chart(document.getElementById('myChart'), {
     type: 'line',
-    data: { labels: xLabels, datasets },
+    data: {labels, datasets},
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
+      responsive: true, maintainAspectRatio: false,
+      interaction: {mode:'index', intersect:false},
       plugins: {
-        legend: { position: 'top', labels: { font: { size: 12 }, boxWidth: 14 } },
+        legend: {position:'top', labels:{font:{size:11}, boxWidth:12}},
         tooltip: {
           callbacks: {
-            title: ctx => `Release ${ctx[0].parsed.x + 1}`,
-            afterBody: ctx => {
-              const raw = ctx[0].raw;
-              return `WASDE #${raw.wasdeNum}  —  ${raw.reportDate}`;
-            },
-            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()} ${unit}`
+            title: ctx => 'Release ' + (ctx[0].parsed.x + 1),
+            afterBody: ctx => 'WASDE #' + ctx[0].raw.wasdeNum + '  —  ' + ctx[0].raw.reportDate,
+            label: ctx => ' ' + ctx.dataset.label + ': ' +
+                          ctx.parsed.y.toLocaleString() + ' ' + unit
           }
         }
       },
       scales: {
-        x: { title: { display: true, text: 'Release number (months since first forecast)', font: { size: 12 } } },
-        y: { title: { display: true, text: unit, font: { size: 12 } },
-             ticks: { callback: v => v.toLocaleString() } }
+        x: {title:{display:true, text:'Release number (months since first forecast)',
+                   font:{size:11}}},
+        y: {title:{display:true, text:unit, font:{size:11}},
+            ticks:{callback: v => v.toLocaleString()}}
       }
     }
   });
-  chart.canvas.parentNode.style.height = '420px';
-  showLoading(false);
-}
-
-function showLoading(on) {
-  document.getElementById('loading').style.display = on ? 'flex' : 'none';
 }
 
 boot();
