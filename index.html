@@ -435,17 +435,16 @@ async function onCommodityChange(){
   const regions=currentData.regions;
   document.getElementById('sel-region').innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
 
-  // Set each table's region — first 6 fixed, last 2 have dropdowns
+  // Set each table's region — null means no data for that slot
   for(let i=0;i<8;i++){
     const def=findRegionByKws(DEFAULT_REGIONS[i]);
-    tableRegions[i]=def||regions[0];
-    // Only slots 6 and 7 have a select element
+    tableRegions[i]=def||null;   // null = not available, do NOT fall back to regions[0]
     if(i>=6){
       const sel=document.getElementById('sel-t'+i);
       if(sel){
         sel.innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
-        // Default to EU for 6, Russia for 7
         if(def) sel.value=def;
+        tableRegions[i]=sel.value; // always has a value since we populate all regions
       }
     }
   }
@@ -776,20 +775,14 @@ function buildTable(region, tableType){
   return h;
 }
 
-// Check if a region has any meaningful data (at least 1 key in data object)
+// A region has data if it's non-null (we only store null when findRegionByKws returned nothing)
+// For dropdown slots (6,7) the region is always set from the select so always has data
 function regionHasData(region){
-  if(!region||!currentData)return false;
-  const rLower=region.toLowerCase().replace(/\s+/g,' ');
-  return Object.keys(currentData.data).some(k=>{
-    const parts=k.split('||');
-    return parts[0].toLowerCase().replace(/\s+/g,' ')===rLower;
-  });
+  return !!region;
 }
 
-// Hide entire table rows where both regions have no data;
-// hide individual cards where only one region has no data
+// Hide table cards and rows where region is null
 function hideEmptyRows(){
-  // Table slot → parent row class mapping
   const rowMap=[
     {slots:[0,1],rowClass:'row-1'},
     {slots:[2,3],rowClass:'row-2'},
@@ -803,26 +796,29 @@ function hideEmptyRows(){
     slots.forEach(i=>{
       const card=document.getElementById('tbl-'+i)?.closest('.table-card');
       if(!card)return;
-      const hasData=regionHasData(tableRegions[i]);
-      card.style.display=hasData?'':'none';
-      if(hasData)anyVisible=true;
+      const show=regionHasData(tableRegions[i]);
+      card.style.display=show?'':'none';
+      if(show)anyVisible=true;
     });
-    // Hide the entire row if no table in it has data
     row.style.display=anyVisible?'':'none';
   });
 }
 
 function renderTable(i){
   if(!currentData)return;
-  // Slots 6 and 7 have dropdowns; 0-5 use fixed cached region
   if(i>=6){
     const sel=document.getElementById('sel-t'+i);
     if(sel) tableRegions[i]=sel.value;
   }
   const region=tableRegions[i];
+  const tblEl=document.getElementById('tbl-'+i);
+  if(!region){
+    tblEl.innerHTML='';
+    hideEmptyRows();
+    return;
+  }
   const tt=tableTypeForIndex(i);
-  document.getElementById('tbl-'+i).innerHTML=buildTable(region,tt);
-  // Re-evaluate visibility after each render
+  tblEl.innerHTML=buildTable(region,tt);
   hideEmptyRows();
 }
 
