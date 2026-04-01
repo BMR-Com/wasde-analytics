@@ -8,71 +8,35 @@ DATA_DIR    = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 MASTER_PATH = os.environ.get("MASTER_CSV_PATH", "master_wasde.csv")
 
-# ── Standard unit conversions (same-family only) ─────────────
-CONV = {
-    ("thousand metric tons",   "million metric tons"):   0.001,
-    ("million metric tons",    "thousand metric tons"):  1000.0,
-    ("1,000 metric tons",      "million metric tons"):   0.001,
-    ("million metric tons",    "1,000 metric tons"):     1000.0,
-    ("1,000 metric tons",      "thousand metric tons"):  1.0,
-    ("thousand metric tons",   "1,000 metric tons"):     1.0,
-    ("metric tons",            "million metric tons"):   0.000001,
-    ("million metric tons",    "metric tons"):           1000000.0,
-    ("metric tons",            "thousand metric tons"):  0.001,
-    ("thousand metric tons",   "metric tons"):           1000.0,
-    ("thousand bushels",       "million bushels"):       0.001,
-    ("million bushels",        "thousand bushels"):      1000.0,
-    ("1,000 bushels",          "million bushels"):       0.001,
-    ("million bushels",        "1,000 bushels"):         1000.0,
-    ("1,000 bushels",          "thousand bushels"):      1.0,
-    ("thousand bushels",       "1,000 bushels"):         1.0,
-    ("bushels",                "million bushels"):       0.000001,
-    ("million bushels",        "bushels"):               1000000.0,
-    ("bushels",                "thousand bushels"):      0.001,
-    ("thousand bushels",       "bushels"):               1000.0,
-    ("thousand 480-lb bales",  "million 480-lb bales"):  0.001,
-    ("million 480-lb bales",   "thousand 480-lb bales"): 1000.0,
-    ("1,000 480-lb bales",     "million 480-lb bales"):  0.001,
-    ("million 480-lb bales",   "1,000 480-lb bales"):    1000.0,
-    ("1,000 480-lb bales",     "thousand 480-lb bales"): 1.0,
-    ("thousand 480-lb bales",  "1,000 480-lb bales"):    1.0,
-    ("thousand short tons",    "million short tons"):    0.001,
-    ("million short tons",     "thousand short tons"):   1000.0,
-    ("thousand cwt",           "million cwt"):           0.001,
-    ("million cwt",            "thousand cwt"):          1000.0,
-    ("thousand hectares",      "million hectares"):      0.001,
-    ("million hectares",       "thousand hectares"):     1000.0,
-    ("thousand acres",         "million acres"):         0.001,
-    ("million acres",          "thousand acres"):        1000.0,
-    ("thousand pounds",        "million pounds"):        0.001,
-    ("million pounds",         "thousand pounds"):       1000.0,
-    ("thousand head",          "million head"):          0.001,
-    ("million head",           "thousand head"):         1000.0,
+# ── Grain commodities — force everything to Million Bushels ───
+GRAIN_KEYWORDS = ["wheat","corn","maize","soybean","oilseed","rice","barley",
+                  "oats","sorghum","rye","coarse grain","grain"]
+
+# MT → Bushels conversion factors (1 metric ton = X bushels)
+MT_TO_BU = {
+    "wheat":        36.7437,
+    "corn":         39.3683,
+    "maize":        39.3683,
+    "soybean":      36.7437,
+    "oilseed":      36.7437,
+    "rice":         45.9296,
+    "barley":       45.9296,
+    "oats":         68.8944,
+    "sorghum":      39.3683,
+    "rye":          39.3683,
+    "coarse grain": 39.3683,
 }
 
-# ── Grain: MT ↔ Bushel conversion factors (MT → 1000 bu) ─────
-# Source: USDA standard conversion factors
-# "million metric tons" ↔ "million bushels" via these multipliers
-GRAIN_MT_TO_BU = {
-    "wheat":    36.7437,   # 1 MT = 36.7437 bu
-    "corn":     39.3683,
-    "maize":    39.3683,
-    "soybean":  36.7437,
-    "oilseed":  36.7437,
-    "rice":     45.9296,
-    "barley":   45.9296,
-    "oats":     68.8944,
-    "sorghum":  39.3683,
-    "rye":      39.3683,
-}
-
-def get_grain_factor(commodity):
-    """Return MT-to-bushel factor for a commodity, or None if not a grain."""
+def is_grain(commodity):
     cn = commodity.lower()
-    for key, factor in GRAIN_MT_TO_BU.items():
+    return any(k in cn for k in GRAIN_KEYWORDS)
+
+def get_mt_to_bu(commodity):
+    cn = commodity.lower()
+    for key, factor in MT_TO_BU.items():
         if key in cn:
             return factor
-    return None
+    return 36.7437  # default wheat factor
 
 def unit_family(u):
     u = u.strip().lower()
@@ -87,64 +51,70 @@ def unit_family(u):
     if "head" in u: return "head"
     return "other"
 
-def scale_factor(u):
-    """Return the numeric scale of a unit (e.g. 'million' → 1e6, 'thousand' → 1e3)."""
+def unit_scale(u):
+    """Returns numeric multiplier: 'million' → 1e6, 'thousand'/'1,000' → 1e3, else 1."""
     u = u.strip().lower()
     if "million" in u: return 1e6
     if "thousand" in u or "1,000" in u: return 1e3
     return 1.0
 
-def convert_val(val, from_unit, to_unit, commodity=""):
+# Standard same-family conversions via scale
+def same_family_convert(val, from_unit, to_unit):
+    """Convert within same unit family using scale factors. Returns (val, True) or (val, False)."""
+    ff = unit_family(from_unit)
+    tf = unit_family(to_unit)
+    if ff != tf:
+        return val, False
+    from_scale = unit_scale(from_unit)
+    to_scale   = unit_scale(to_unit)
+    if to_scale == 0:
+        return val, False
+    return val * (from_scale / to_scale), True
+
+def convert_to_canonical(val, from_unit, canonical_unit, commodity):
     """
-    Convert val from from_unit to to_unit.
-    Returns (converted_value, success_bool).
-    Handles same-family and grain bushel↔MT cross-family conversions.
+    Convert val (in from_unit) to canonical_unit.
+    For grains: canonical is always 'Million Bushels'.
+    Handles MT→bushel cross-family for grains.
+    Returns (converted_val, ok_bool).
     """
     fu = from_unit.strip().lower()
-    tu = to_unit.strip().lower()
-    if fu == tu or fu == "" or tu == "":
+    cu = canonical_unit.strip().lower()
+
+    if fu == cu or fu == "" or cu == "":
         return val, True
 
     ff = unit_family(fu)
-    tf = unit_family(tu)
+    cf = unit_family(cu)
 
-    # Same family — use CONV table
-    if ff == tf:
-        factor = CONV.get((fu, tu))
-        if factor is not None:
-            return val * factor, True
-        factor_inv = CONV.get((tu, fu))
-        if factor_inv is not None:
-            return val / factor_inv, True
-        # Same family, unknown scale combo — try deriving from scale factors
-        try:
-            ratio = scale_factor(fu) / scale_factor(tu)
-            return val * ratio, True
-        except Exception:
+    # Same family — use scale
+    if ff == cf:
+        from_scale = unit_scale(fu)
+        to_scale   = unit_scale(cu)
+        if to_scale == 0:
+            return val, False
+        return val * (from_scale / to_scale), True
+
+    # Cross-family MT ↔ bushel (grains only)
+    if ff in ("mt", "bushel") and cf in ("mt", "bushel") and is_grain(commodity):
+        mt_to_bu = get_mt_to_bu(commodity)
+        from_scale = unit_scale(fu)
+        to_scale   = unit_scale(cu)
+        if to_scale == 0:
             return val, False
 
-    # Cross-family: only support MT ↔ bushel for grains
-    if (ff in ("mt","bushel") and tf in ("mt","bushel")):
-        grain_factor = get_grain_factor(commodity)
-        if grain_factor is None:
-            return val, False   # not a known grain — can't convert
-        # grain_factor = MT_to_bu for 1 unit (e.g. 1 MT = 36.7437 bu)
-        # We need to account for scale (million vs thousand)
-        from_scale = scale_factor(fu)
-        to_scale   = scale_factor(tu)
-        if ff == "mt" and tf == "bushel":
-            # val is in from_scale MT → convert to to_scale bushels
-            val_in_mt     = val * from_scale          # raw MT
-            val_in_bu     = val_in_mt * grain_factor  # raw bushels
-            return val_in_bu / to_scale, True
-        else:
-            # bushel → MT
-            val_in_bu     = val * from_scale
-            val_in_mt     = val_in_bu / grain_factor
-            return val_in_mt / to_scale, True
+        val_base = val * from_scale  # convert to raw units first
 
-    return val, False   # incompatible families
+        if ff == "mt" and cf == "bushel":
+            val_converted = val_base * mt_to_bu
+        else:  # bushel → MT
+            val_converted = val_base / mt_to_bu
 
+        return val_converted / to_scale, True
+
+    return val, False
+
+# ── Release pipeline helpers ──────────────────────────────────
 def download_from_release():
     import urllib.request
     repo  = os.environ["GITHUB_REPOSITORY"]
@@ -153,7 +123,9 @@ def download_from_release():
     fname = "master_wasde.csv"
     api_url = "https://api.github.com/repos/" + repo + "/releases/tags/" + tag
     req = urllib.request.Request(api_url, headers={
-        "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json"})
+        "Authorization": "Bearer " + token,
+        "Accept": "application/vnd.github+json"
+    })
     with urllib.request.urlopen(req) as r:
         release = json.loads(r.read())
     asset = next((a for a in release["assets"] if a["name"] == fname), None)
@@ -161,7 +133,9 @@ def download_from_release():
         raise FileNotFoundError(fname + " not found in release assets")
     print("Downloading " + fname + " (" + str(asset["size"]//1024//1024) + " MB)...")
     dl_req = urllib.request.Request(asset["url"], headers={
-        "Authorization": "Bearer " + token, "Accept": "application/octet-stream"})
+        "Authorization": "Bearer " + token,
+        "Accept": "application/octet-stream"
+    })
     with urllib.request.urlopen(dl_req) as r, open(MASTER_PATH, "wb") as f:
         f.write(r.read())
     print("Downloaded — " + str(Path(MASTER_PATH).stat().st_size//1024//1024) + " MB")
@@ -242,6 +216,7 @@ def upload_to_release():
     urllib.request.urlopen(up_req)
     print("Uploaded " + fname + " to release")
 
+# ── Core JSON generation ──────────────────────────────────────
 def generate_jsons():
     print("\nGenerating JSONs...")
     df = pd.read_csv(MASTER_PATH, low_memory=False)
@@ -254,7 +229,8 @@ def generate_jsons():
     manifest = []
 
     for commodity in sorted(df["Commodity"].unique()):
-        cdf = df[df["Commodity"] == commodity].copy()
+        cdf   = df[df["Commodity"] == commodity].copy()
+        grain = is_grain(commodity)
 
         # Skip commodities without data in last 3 market years
         all_mkt_years = sorted(cdf["MarketYear"].unique().tolist())
@@ -263,22 +239,44 @@ def generate_jsons():
             print("  SKIP " + commodity + " — insufficient recent data")
             continue
 
-        data = {}
-
-        # Canonical unit = mode of unit in the 5 most recent WasdeNumbers
-        top5_w = sorted(cdf["WasdeNumber"].unique())[-5:]
+        # ── Determine canonical unit per (Region, Attribute) ──
+        # For grains: canonical is ALWAYS "Million Bushels" (forces uniform unit)
+        # For others: use mode unit from 5 most recent WasdeNumbers
+        top5_w  = sorted(cdf["WasdeNumber"].unique())[-5:]
         unit_map = {}  # (region, attr_lower) → canonical_unit
 
         for (region, attribute), grp in cdf.groupby(["Region","Attribute"]):
-            key_norm   = (region, attribute.strip().lower())
-            recent_grp = grp[grp["WasdeNumber"].isin(top5_w)]
-            if len(recent_grp) == 0:
-                recent_grp = grp
-            unit_counts = recent_grp["Unit"].value_counts()
-            unit_map[key_norm] = unit_counts.idxmax() if len(unit_counts) else ""
+            key_norm = (region, attribute.strip().lower())
+            if grain:
+                # Check if this attribute has any numeric unit (skip price etc.)
+                recent_grp = grp[grp["WasdeNumber"].isin(top5_w)]
+                if len(recent_grp) == 0:
+                    recent_grp = grp
+                units = recent_grp["Unit"].value_counts()
+                dominant = units.idxmax() if len(units) else ""
+                dom_fam  = unit_family(dominant)
+                # Force bushel for quantity attributes; keep original for price/yield
+                if dom_fam in ("mt", "bushel"):
+                    # Determine scale from dominant unit
+                    scale = unit_scale(dominant)
+                    if scale >= 1e6:
+                        canonical = "Million Bushels"
+                    else:
+                        canonical = "Million Bushels"  # always use Million Bushels for consistency
+                else:
+                    canonical = dominant  # price, yield, acres — keep as-is
+            else:
+                recent_grp = grp[grp["WasdeNumber"].isin(top5_w)]
+                if len(recent_grp) == 0:
+                    recent_grp = grp
+                units = recent_grp["Unit"].value_counts()
+                canonical = units.idxmax() if len(units) else ""
+            unit_map[key_norm] = canonical
 
-        # Build normalized series
-        fail_pairs = set()
+        # ── Build normalized series using Unit column from CSV ─
+        data = {}
+        fail_keys = set()
+
         for (region, attribute, mkt_year), grp in cdf.groupby(
                 ["Region","Attribute","MarketYear"]):
             key_norm  = (region, attribute.strip().lower())
@@ -288,17 +286,20 @@ def generate_jsons():
 
             rows = []
             for _, row in grp.iterrows():
-                raw_val  = float(row["Value"])
-                row_unit = str(row["Unit"]).strip()
-                conv_val, ok = convert_val(raw_val, row_unit, canonical, commodity)
+                raw_val   = float(row["Value"])
+                # Use the Unit column from CSV — this is the actual unit of this specific value
+                row_unit  = str(row["Unit"]).strip()
+                conv_val, ok = convert_to_canonical(raw_val, row_unit, canonical, commodity)
 
                 if not ok:
-                    conv_val = raw_val  # keep raw, mark bad
-                    fp = row_unit + " → " + canonical
-                    if fp not in fail_pairs:
-                        fail_pairs.add(fp)
-                        print("  WARN " + commodity + "/" + region + "/" +
-                              attribute + ": " + fp)
+                    conv_val  = raw_val
+                    used_unit = row_unit
+                    fk = commodity + "/" + region + "/" + attribute + ": [" + row_unit + "] → [" + canonical + "]"
+                    if fk not in fail_keys:
+                        fail_keys.add(fk)
+                        print("  WARN " + fk)
+                else:
+                    used_unit = canonical
 
                 rows.append({
                     "releaseNum":    int(row["releaseNum"]),
@@ -309,14 +310,14 @@ def generate_jsons():
                                      if pd.notna(row.get("ForecastYear")) else None,
                     "forecastMonth": int(row["ForecastMonth"])
                                      if pd.notna(row.get("ForecastMonth")) else None,
-                    "unit":          canonical if ok else row_unit,
+                    "unit":          used_unit,
                     "unitOk":        ok
                 })
 
             key = region + "||" + attribute + "||" + mkt_year
             data[key] = rows
 
-        # Unit display map
+        # Unit display map (region||attr → canonical)
         unit_display = {}
         for (region, attr_norm), unit in unit_map.items():
             orig = cdf[cdf["Attribute"].str.strip().str.lower() == attr_norm]["Attribute"]
@@ -326,6 +327,7 @@ def generate_jsons():
         fname = commodity.replace("/","-").replace(" ","_") + ".json"
         out = {
             "commodity":   commodity,
+            "isGrain":     grain,
             "regions":     sorted(cdf["Region"].unique().tolist()),
             "attributes":  sorted(cdf["Attribute"].unique().tolist()),
             "marketYears": all_mkt_years,
@@ -336,7 +338,8 @@ def generate_jsons():
         with open(DATA_DIR / fname, "w") as f:
             json.dump(out, f, separators=(",",":"))
         kb = (DATA_DIR / fname).stat().st_size // 1024
-        print("  " + fname + " (" + str(kb) + " KB)")
+        flag = " [GRAIN→Bu]" if grain else ""
+        print("  " + fname + " (" + str(kb) + " KB)" + flag)
         manifest.append({"commodity": commodity, "file": fname,
                          "regions": out["regions"]})
 
