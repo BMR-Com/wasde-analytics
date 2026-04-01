@@ -6,72 +6,105 @@
 <title>WASDE Analytics</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
+/* ── Screen styles ─────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
-header{background:#1a2e1a;color:#fff;padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
-header h1{font-size:1.1rem;font-weight:500}
-.hright{font-size:11px;opacity:.7;text-align:right;line-height:1.7}
-.nrbar{background:#fffbf0;border-bottom:1px solid #e8d8a0;padding:.5rem 2rem;font-size:12px;color:#7a5000;display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center}
-.nrb-lbl{font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
-.top-controls{display:flex;gap:16px;padding:1rem 2rem;background:#fff;border-bottom:1px solid #e5e5e0;flex-wrap:wrap;align-items:flex-end}
-.ctrl label{display:block;font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-select{padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff;cursor:pointer}
-select.wide{min-width:220px}
-.section{padding:1.5rem 2rem;max-width:1300px;margin:0 auto}
-.sec-title{font-size:12px;font-weight:600;color:#1a2e1a;margin-bottom:1rem;text-transform:uppercase;letter-spacing:.08em;border-left:3px solid #1a2e1a;padding-left:.6rem}
-.tables-row{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
-@media(max-width:900px){.tables-row{grid-template-columns:1fr}}
-.table-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;overflow:hidden}
-.tc-head{background:#1a2e1a;color:#fff;padding:.55rem 1rem;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
-.tc-head select{background:#2a4a2a;color:#fff;border:1px solid #3a6a3a;border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;max-width:200px}
+header{background:#1a2e1a;color:#fff;padding:.9rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+header h1{font-size:1rem;font-weight:500}
+.hright{font-size:11px;opacity:.7;text-align:right;line-height:1.6}
+.nrbar{background:#fffbf0;border-bottom:1px solid #e8d8a0;padding:.4rem 1.5rem;font-size:11px;color:#7a5000;display:flex;gap:1.2rem;flex-wrap:wrap;align-items:center}
+.nrb-lbl{font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.top-controls{display:flex;gap:12px;padding:.75rem 1.5rem;background:#fff;border-bottom:1px solid #e5e5e0;flex-wrap:wrap;align-items:flex-end}
+.ctrl label{display:block;font-size:10px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+select{padding:5px 8px;border:1px solid #ddd;border-radius:5px;font-size:12px;background:#fff;cursor:pointer}
+select.wide{min-width:200px}
+.section{padding:1rem 1.5rem;max-width:1500px;margin:0 auto}
+.sec-title{font-size:11px;font-weight:600;color:#1a2e1a;margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.08em;border-left:3px solid #1a2e1a;padding-left:.5rem}
+
+/* 4 tables per row */
+.tables-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:.75rem}
+@media(max-width:1200px){.tables-row{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.tables-row{grid-template-columns:1fr}}
+
+.table-card{background:#fff;border:1px solid #e5e5e0;border-radius:8px;overflow:hidden}
+.tc-head{background:#1a2e1a;color:#fff;padding:.4rem .75rem;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:space-between;gap:.4rem;flex-wrap:wrap}
+.tc-head select{background:#2a4a2a;color:#fff;border:1px solid #3a6a3a;border-radius:4px;padding:2px 5px;font-size:10px;cursor:pointer;max-width:160px}
 .tc-head select option{background:#1a2e1a}
 .tbl-scroll{overflow-x:auto}
-table.bs{width:100%;border-collapse:collapse;font-size:11.5px}
-table.bs th{background:#f5f5f3;padding:5px 7px;text-align:center;font-weight:500;color:#555;border-bottom:1px solid #e5e5e0;white-space:nowrap}
-table.bs th.ac{text-align:left;min-width:150px}
-table.bs th.yg{background:#edf2ed;color:#1a2e1a;font-size:11px;border-bottom:1px solid #c8d8c8}
-table.bs th.pg{background:#fff8e6;color:#7a5000;font-size:11px;border-bottom:1px solid #e8d8a0}
-table.bs td{padding:4px 7px;border-bottom:1px solid #f0f0ee;text-align:right;white-space:nowrap}
-table.bs td.an{text-align:left;color:#333;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+table.bs{width:100%;border-collapse:collapse;font-size:10px}
+table.bs th{background:#f5f5f3;padding:3px 5px;text-align:center;font-weight:500;color:#555;border-bottom:1px solid #e5e5e0;white-space:nowrap}
+table.bs th.ac{text-align:left;min-width:110px;max-width:130px}
+table.bs th.yg{background:#edf2ed;color:#1a2e1a;font-size:9px;border-bottom:1px solid #c8d8c8}
+table.bs th.pg{background:#fff8e6;color:#7a5000;font-size:9px;border-bottom:1px solid #e8d8a0}
+table.bs td{padding:2px 5px;border-bottom:1px solid #f0f0ee;text-align:right;white-space:nowrap;font-size:10px}
+table.bs td.an{text-align:left;color:#333;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 table.bs tr.hl-es td{background:#fef9e7;font-weight:600}
 table.bs tr.hl-es td.an{color:#7a5000}
 table.bs tr.hl-es:hover td{background:#fef3c7}
 table.bs tr.hl-prod td{background:#e8f5e9}
 table.bs tr.hl-prod td.an{color:#1a5e20}
 table.bs tr.hl-prod:hover td{background:#d4edda}
-table.bs tr:hover td{background:rgba(0,0,0,.025)}
-table.bs tr.sep-top td{border-top:2px solid #d5d5d0}
+table.bs tr:hover td{background:rgba(0,0,0,.02)}
+table.bs tr.sep-top td{border-top:1.5px solid #d0d0cc}
 table.bs tr:last-child td{border-bottom:none}
 .up{color:#166534}.dn{color:#991b1b}
-.chg{font-size:9.5px}
-.pv{background:#fffbf0;color:#7a5000;font-weight:500}
-.pv-derived{background:#eff6ff;color:#1e40af;font-style:italic}
-.summary-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:1.25rem;margin-bottom:1.25rem}
-.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:.75rem}
+.chg{font-size:8.5px}
+.pv{background:#fffbf0;color:#7a5000;font-weight:600}
+.pv-es{background:#eff6ff;color:#1e40af;font-weight:600}
+.summary-card{background:#fff;border:1px solid #e5e5e0;border-radius:8px;padding:1rem;margin-bottom:.75rem}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:.6rem}
 @media(max-width:700px){.summary-grid{grid-template-columns:1fr}}
-.sb h4{font-size:11px;font-weight:600;color:#1a2e1a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;border-bottom:1px solid #e5e5e0;padding-bottom:.4rem}
+.sb h4{font-size:10px;font-weight:600;color:#1a2e1a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;border-bottom:1px solid #e5e5e0;padding-bottom:.3rem}
 .sb ul{padding-left:1rem;list-style:disc}
-.sb li{font-size:12px;line-height:1.8;color:#333}
-.sb p{font-size:12px;line-height:1.7;color:#444}
-.tag-up{display:inline-block;background:#dcfce7;color:#166534;border-radius:3px;padding:0 5px;font-size:10px;font-weight:600;margin-right:2px}
-.tag-dn{display:inline-block;background:#fee2e2;color:#991b1b;border-radius:3px;padding:0 5px;font-size:10px;font-weight:600;margin-right:2px}
-.model-note{font-size:10px;color:#aaa;margin-top:.6rem;line-height:1.6}
-.custom-pred-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
-@media(max-width:700px){.custom-pred-wrap{grid-template-columns:1fr}}
-.pred-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:1rem}
-.pred-card h5{font-size:11px;font-weight:600;color:#1a2e1a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;border-bottom:1px solid #e5e5e0;padding-bottom:.4rem}
-.chart-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
-.chart-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:1rem}
-.pills-lbl{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
-.pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
-.pill{padding:3px 10px;border-radius:99px;font-size:11px;cursor:pointer;border:1px solid #ccc;background:#fff;transition:all .12s}
+.sb li{font-size:11px;line-height:1.7;color:#333}
+.sb p{font-size:11px;line-height:1.6;color:#444}
+.tag-up{display:inline-block;background:#dcfce7;color:#166534;border-radius:3px;padding:0 4px;font-size:9px;font-weight:600;margin-right:2px}
+.tag-dn{display:inline-block;background:#fee2e2;color:#991b1b;border-radius:3px;padding:0 4px;font-size:9px;font-weight:600;margin-right:2px}
+.model-note{font-size:9px;color:#aaa;margin-top:.4rem;line-height:1.5}
+.chart-card{background:#fff;border:1px solid #e5e5e0;border-radius:8px;padding:1rem;margin-bottom:1rem}
+.chart-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem}
+.pills-lbl{font-size:10px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.pills{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:.75rem}
+.pill{padding:2px 9px;border-radius:99px;font-size:10px;cursor:pointer;border:1px solid #ccc;background:#fff;transition:all .12s}
 .pill.active{background:#1a2e1a;color:#fff;border-color:#1a2e1a}
-#chart-container{position:relative;height:380px}
-.spinner{text-align:center;padding:2rem;color:#aaa;font-size:12px}
-.no-data{text-align:center;padding:1.5rem;color:#bbb;font-size:11px}
-.tbl-legend{display:flex;gap:1rem;padding:.4rem 1rem;background:#f9f9f7;border-top:1px solid #f0f0ee;font-size:10px;color:#777;flex-wrap:wrap}
-.tll{display:flex;align-items:center;gap:4px}
-.tll-box{width:10px;height:10px;border-radius:2px;display:inline-block}
+#chart-container{position:relative;height:320px}
+.spinner{text-align:center;padding:1.5rem;color:#aaa;font-size:11px}
+.no-data{text-align:center;padding:1rem;color:#bbb;font-size:10px}
+.tbl-legend{display:flex;gap:.75rem;padding:.3rem .75rem;background:#f9f9f7;border-top:1px solid #f0f0ee;font-size:9px;color:#777;flex-wrap:wrap}
+.tll{display:flex;align-items:center;gap:3px}
+.tll-box{width:8px;height:8px;border-radius:2px;display:inline-block}
+.print-btn{background:#1a2e1a;color:#fff;border:none;padding:.5rem 1.2rem;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.print-btn:hover{background:#2a4a2a}
+.no-avail{font-size:10px;color:#bbb;padding:.75rem;text-align:center}
+
+/* ── Print styles ──────────────────────────────────────────── */
+@media print {
+  @page{size:A4 landscape;margin:8mm 8mm 8mm 8mm}
+  body{background:#fff;color:#000;font-size:8px}
+  header,.nrbar,.top-controls,.chart-card,.summary-card,.print-btn,
+  .tc-head select,.pills,.pills-lbl{display:none!important}
+  .section{padding:0;max-width:100%}
+  .sec-title{font-size:8px;margin-bottom:3px;padding-left:4px}
+  /* 4 tables per row, 2 rows per page */
+  .tables-row{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-bottom:3px;page-break-inside:avoid}
+  .table-card{border:0.5px solid #aaa;border-radius:0;break-inside:avoid}
+  .tc-head{padding:2px 4px;font-size:7px}
+  table.bs{font-size:6.5px}
+  table.bs th{padding:1px 3px;font-size:6px}
+  table.bs th.ac{min-width:80px;max-width:90px}
+  table.bs td{padding:1px 3px;font-size:6.5px}
+  table.bs td.an{max-width:90px}
+  .tbl-legend{display:none}
+  .chg{font-size:6px}
+  /* First row of tables: page 1, second row: page 2 */
+  .tables-row.row-2{page-break-before:always}
+  .print-title{display:block!important;font-size:9px;font-weight:600;text-align:center;margin-bottom:4px;color:#1a2e1a}
+  .print-meta{display:block!important;font-size:7px;text-align:center;color:#555;margin-bottom:6px}
+  .pv,.pv-es{font-size:6.5px}
+}
+@media screen{
+  .print-title,.print-meta{display:none}
+}
 </style>
 </head>
 <body>
@@ -82,10 +115,10 @@ table.bs tr:last-child td{border-bottom:none}
 </header>
 
 <div class="nrbar">
-  <div><span class="nrb-lbl">Next WASDE release:</span> <span id="next-release-date">—</span></div>
+  <div><span class="nrb-lbl">Next WASDE:</span> <span id="next-release-date">—</span></div>
   <div><span class="nrb-lbl">Days away:</span> <span id="days-away">—</span></div>
-  <div><span class="nrb-lbl">Time (ET):</span> 12:00 PM EST</div>
-  <div style="margin-left:auto;font-size:11px;opacity:.7">Predictions are for next release</div>
+  <div><span class="nrb-lbl">Time:</span> 12:00 PM ET</div>
+  <div style="margin-left:auto;font-size:10px;opacity:.7">Predictions for next release</div>
 </div>
 
 <div class="top-controls">
@@ -95,40 +128,61 @@ table.bs tr:last-child td{border-bottom:none}
       <option>Loading...</option>
     </select>
   </div>
-  <div style="font-size:12px;color:#888;padding-top:14px">All sections update when commodity changes</div>
+  <button class="print-btn" onclick="window.print()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Print / Save PDF
+  </button>
+  <div style="font-size:11px;color:#888;padding-top:12px">A4 landscape · 8 balance sheets · auto-updates monthly</div>
 </div>
 
 <div class="section">
-  <div class="sec-title">Balance Sheet — Last 2 Releases &times; 3 Latest Marketing Years</div>
+  <!-- Print-only header -->
+  <div class="print-title" id="print-title">WASDE Balance Sheet Dashboard</div>
+  <div class="print-meta" id="print-meta"></div>
 
-  <div class="tables-row">
+  <div class="sec-title">Balance Sheet — Last 2 Releases × 3 Latest Marketing Years</div>
+
+  <!-- Row 1: World, USA, Brazil, China -->
+  <div class="tables-row row-1">
     <div class="table-card">
-      <div class="tc-head"><span>World</span></div>
-      <div id="tbl-world"><div class="spinner">Loading...</div></div>
+      <div class="tc-head"><span id="lbl-t0">World</span><select id="sel-t0" onchange="renderTable(0)"></select></div>
+      <div id="tbl-0"><div class="spinner">Loading...</div></div>
     </div>
     <div class="table-card">
-      <div class="tc-head"><span>United States</span></div>
-      <div id="tbl-us"><div class="spinner">Loading...</div></div>
+      <div class="tc-head"><span id="lbl-t1">United States</span><select id="sel-t1" onchange="renderTable(1)"></select></div>
+      <div id="tbl-1"><div class="spinner">Loading...</div></div>
+    </div>
+    <div class="table-card">
+      <div class="tc-head"><span id="lbl-t2">Brazil</span><select id="sel-t2" onchange="renderTable(2)"></select></div>
+      <div id="tbl-2"><div class="spinner">Loading...</div></div>
+    </div>
+    <div class="table-card">
+      <div class="tc-head"><span id="lbl-t3">China</span><select id="sel-t3" onchange="renderTable(3)"></select></div>
+      <div id="tbl-3"><div class="spinner">Loading...</div></div>
     </div>
   </div>
 
-  <div class="tables-row">
+  <!-- Row 2: World less China, India, EU, Russia -->
+  <div class="tables-row row-2">
     <div class="table-card">
-      <div class="tc-head">
-        <span>Custom Region 1</span>
-        <select id="sel-custom1" onchange="renderCustomTable(1)"></select>
-      </div>
-      <div id="tbl-custom1"><div class="spinner">Loading...</div></div>
+      <div class="tc-head"><span id="lbl-t4">World less China</span><select id="sel-t4" onchange="renderTable(4)"></select></div>
+      <div id="tbl-4"><div class="spinner">Loading...</div></div>
     </div>
     <div class="table-card">
-      <div class="tc-head">
-        <span>Custom Region 2</span>
-        <select id="sel-custom2" onchange="renderCustomTable(2)"></select>
-      </div>
-      <div id="tbl-custom2"><div class="spinner">Loading...</div></div>
+      <div class="tc-head"><span id="lbl-t5">India</span><select id="sel-t5" onchange="renderTable(5)"></select></div>
+      <div id="tbl-5"><div class="spinner">Loading...</div></div>
+    </div>
+    <div class="table-card">
+      <div class="tc-head"><span id="lbl-t6">European Union</span><select id="sel-t6" onchange="renderTable(6)"></select></div>
+      <div id="tbl-6"><div class="spinner">Loading...</div></div>
+    </div>
+    <div class="table-card">
+      <div class="tc-head"><span id="lbl-t7">Russia</span><select id="sel-t7" onchange="renderTable(7)"></select></div>
+      <div id="tbl-7"><div class="spinner">Loading...</div></div>
     </div>
   </div>
 
+  <!-- Summary -->
   <div class="summary-card">
     <div class="sec-title" style="margin-bottom:0">Analysis &amp; Prediction — World &amp; United States</div>
     <div class="summary-grid">
@@ -137,24 +191,13 @@ table.bs tr:last-child td{border-bottom:none}
         <div id="summary-text"><div class="spinner">Loading...</div></div>
       </div>
       <div class="sb">
-        <h4>Next release prediction <span id="pred-label" style="font-weight:400;color:#aaa;font-size:10px"></span></h4>
+        <h4>Next release prediction <span id="pred-label" style="font-weight:400;color:#aaa;font-size:9px"></span></h4>
         <div id="prediction-text"><div class="spinner">Loading...</div></div>
       </div>
     </div>
   </div>
 
-  <div class="sec-title">Prediction — Custom Regions</div>
-  <div class="custom-pred-wrap">
-    <div class="pred-card">
-      <h5 id="cpred1-title">Custom Region 1 — Next Release Prediction</h5>
-      <div id="cpred1"><div class="spinner">Loading...</div></div>
-    </div>
-    <div class="pred-card">
-      <h5 id="cpred2-title">Custom Region 2 — Next Release Prediction</h5>
-      <div id="cpred2"><div class="spinner">Loading...</div></div>
-    </div>
-  </div>
-
+  <!-- Chart -->
   <div class="chart-card">
     <div class="sec-title">Forecast Evolution Chart</div>
     <div class="chart-controls">
@@ -167,7 +210,7 @@ table.bs tr:last-child td{border-bottom:none}
         <select id="sel-attribute" onchange="renderChart()"></select>
       </div>
     </div>
-    <div class="pills-lbl">Marketing Years (toggle to compare)</div>
+    <div class="pills-lbl">Marketing Years</div>
     <div class="pills" id="mkt-pills"></div>
     <div id="chart-container"><canvas id="myChart"></canvas></div>
   </div>
@@ -179,79 +222,101 @@ const COLORS = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed',
                 '#0891b2','#be185d','#65a30d','#ea580c','#6d28d9',
                 '#0d9488','#b45309','#1d4ed8','#15803d','#c2410c'];
 
-const WASDE_2026 = [
-  '2026-01-12','2026-02-10','2026-03-10','2026-04-09',
+const WASDE_2026 = ['2026-01-12','2026-02-10','2026-03-10','2026-04-09',
   '2026-05-12','2026-06-11','2026-07-10','2026-08-12',
-  '2026-09-11','2026-10-09','2026-11-10','2026-12-10'
+  '2026-09-11','2026-10-09','2026-11-10','2026-12-10'];
+
+// Default region keywords for each table slot
+const DEFAULT_REGIONS = [
+  ['world'],                              // 0 World
+  ['united states','u.s.','usa'],         // 1 USA
+  ['brazil'],                             // 2 Brazil
+  ['china','mainland'],                   // 3 China (not World less China)
+  ['world less china','ex-china','world excl'], // 4 World less China
+  ['india'],                              // 5 India
+  ['european union','eu-27','eu-28','eu '], // 6 EU
+  ['russia','russian'],                   // 7 Russia
 ];
 
+// ── Attribute ordering ────────────────────────────────────────
 const ATTR_RULES = [
-  [/^area.*(planted|seeded)/i,           0],
-  [/^area.*(harv)/i,                     0],
-  [/^yield/i,                            1],
-  [/^beginning.stock/i,                  2],
-  [/^production/i,                       2],
-  [/^import/i,                           2],
-  [/^supply.*(total|,\s*total)/i,        2],
-  [/^total.supply/i,                     2],
-  [/^crushing/i,                         3],
-  [/^domestic.use/i,                     3],
-  [/^domestic.disappear/i,               3],
-  [/^domestic.*total/i,                  3],
-  [/^biofuel/i,                          3],
-  [/^food.*feed/i,                       3],
-  [/^food.*industrial/i,                 3],
-  [/^export(?!s?,\s*total)/i,            3],
-  [/^seed/i,                             3],
-  [/^residual/i,                         3],
-  [/^use.*(total|,\s*total)/i,           3],
-  [/^total\s*use/i,                      3],
-  [/^unaccounted/i,                      4],
-  [/^ending.stock/i,                     4],
-  [/^avg.*farm.*price/i,                 5],
-  [/^avg.*price/i,                       5],
+  [/^area.*(planted|seeded)/i,       0],
+  [/^area.*(harv)/i,                 0],
+  [/^yield/i,                        1],
+  [/^beginning.stock/i,              2],
+  [/^production/i,                   2],
+  [/^import/i,                       2],
+  [/^supply.*(total|,\s*total)/i,    2],
+  [/^total.supply/i,                 2],
+  [/^crushing/i,                     3],
+  [/^domestic.use/i,                 3],
+  [/^domestic.disappear/i,           3],
+  [/^domestic.*total/i,              3],
+  [/^biofuel/i,                      3],
+  [/^food.*feed/i,                   3],
+  [/^food.*industrial/i,             3],
+  [/^export(?!s?,\s*total)/i,        3],
+  [/^seed/i,                         3],
+  [/^residual/i,                     3],
+  [/^use.*(total|,\s*total)/i,       3],
+  [/^total\s*use/i,                  3],
+  [/^unaccounted/i,                  4],
+  [/^ending.stock/i,                 4],
+  [/^avg.*farm.*price/i,             5],
+  [/^avg.*price/i,                   5],
 ];
 
+// Excluded from ALL tables
 const EXCL_ALL = [
-  /farm.price.*high/i, /farm.price.*low/i, /price.*high/i, /price.*low/i,
+  /farm.price.*high/i, /farm.price.*low/i,
+  /price.*high/i,      /price.*low/i,
   /^exports?,\s*total/i,
+  /^output$/i,
+  /^trade$/i,
 ];
+
+// Excluded from World table
 const EXCL_WORLD = [
   /^use.*(total|,\s*total)/i, /^total\s*use/i,
-  /^unaccounted/i, /^area.*(planted|seeded)/i,
-];
-const EXCL_CUSTOM = [
-  /^avg.*farm.*price/i, /^avg.*price/i, /^area.*(harv)/i,
-  /^loss/i, /^output/i,
-  /^supply.*(total|,\s*total)/i, /^total.supply/i,
-  /^use.*(total|,\s*total)/i, /^total\s*use/i,
-  /^trade/i, /^unaccounted/i, /^area.*(planted|seeded)/i,
+  /^unaccounted/i,
+  /^area.*(planted|seeded)/i,
 ];
 
-const DERIVED_PAT = [
+// Excluded from non-US/non-World country tables (custom)
+const EXCL_CUSTOM = [
+  /^avg.*farm.*price/i, /^avg.*price/i,
+  /^area.*(harv)/i,
+  /^loss/i,
   /^supply.*(total|,\s*total)/i, /^total.supply/i,
   /^use.*(total|,\s*total)/i,    /^total\s*use/i,
-  /^ending.stock/i,
+  /^trade/i,
+  /^unaccounted/i,
+  /^area.*(planted|seeded)/i,
+  /^output/i,
 ];
 
-function isDerived(a){ return DERIVED_PAT.some(rx=>rx.test(a.trim())); }
-function isEndingStocks(a){ return /^ending.stock/i.test(a.trim()); }
-function isProduction(a){ return /^production/i.test(a.trim()); }
-function isWorldReg(r){ return r&&r.toLowerCase().includes('world'); }
+// ONLY Ending Stocks is derived — everything else uses direct prediction
+const DERIVED_PAT = [/^ending.stock/i];
 
-function isExcluded(a,tt){
+function isDerived(a){ return DERIVED_PAT.some(rx=>rx.test(a.trim())); }
+function isES(a){ return /^ending.stock/i.test(a.trim()); }
+function isProd(a){ return /^production/i.test(a.trim()); }
+function isWorldReg(r){ return r&&r.toLowerCase().includes('world')&&!r.toLowerCase().includes('less')&&!r.toLowerCase().includes('excl'); }
+
+function isExcluded(a, tt){
   const t=a.trim();
-  if(EXCL_ALL.some(rx=>rx.test(t)))return true;
-  if((tt==='world'||tt==='custom')&&EXCL_WORLD.some(rx=>rx.test(t)))return true;
-  if(tt==='custom'&&EXCL_CUSTOM.some(rx=>rx.test(t)))return true;
+  if(EXCL_ALL.some(rx=>rx.test(t))) return true;
+  if((tt==='world'||tt==='custom')&&EXCL_WORLD.some(rx=>rx.test(t))) return true;
+  if(tt==='custom'&&EXCL_CUSTOM.some(rx=>rx.test(t))) return true;
   return false;
 }
+
 function attrSortKey(a){
-  for(let i=0;i<ATTR_RULES.length;i++)if(ATTR_RULES[i][0].test(a.trim()))return i*100+ATTR_RULES[i][1];
+  for(let i=0;i<ATTR_RULES.length;i++) if(ATTR_RULES[i][0].test(a.trim())) return i*100+ATTR_RULES[i][1];
   return 9999;
 }
 function attrGroup(a){
-  for(const[rx,g]of ATTR_RULES)if(rx.test(a.trim()))return g;
+  for(const[rx,g]of ATTR_RULES) if(rx.test(a.trim())) return g;
   return 99;
 }
 
@@ -259,7 +324,7 @@ function getNextReleaseInfo(){
   const now=new Date();
   for(const ds of WASDE_2026){
     const d=new Date(ds+'T17:00:00Z');
-    if(d>now)return{
+    if(d>now) return{
       label:d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
       days:Math.ceil((d-now)/86400000),
       month:d.toLocaleDateString('en-US',{month:'long',year:'numeric'})
@@ -275,36 +340,35 @@ function getNextReleaseInfo(){
 
 let manifest=null,currentData=null,chart=null;
 let activeYears=new Set(),all_attrs_sorted=[],NR_MONTH='';
+const esFormulaCache={};
+// Current region for each of 8 table slots
+const tableRegions=new Array(8).fill(null);
 
-// ── Formula cache: discovered ES components per region ────────
-// esFormulaCache[region] = { addAttrs:[], subAttrs:[], methodLabel:'' }
-const esFormulaCache = {};
-
+// ── Boot ──────────────────────────────────────────────────────
 async function boot(){
   const nri=getNextReleaseInfo();
   NR_MONTH=nri.month;
   document.getElementById('next-release-date').textContent=nri.label;
   document.getElementById('days-away').textContent=nri.days<=0?'Today!':nri.days+' days';
   document.getElementById('pred-label').textContent='('+NR_MONTH+')';
+  document.getElementById('print-meta').textContent=
+    'Commodity: — | Updated: — | Prediction: '+NR_MONTH;
   try{
     const res=await fetch(BASE+'/manifest.json');
     manifest=await res.json();
-    document.getElementById('last-updated').textContent='Data updated: '+manifest.lastUpdated;
+    document.getElementById('last-updated').textContent='Updated: '+manifest.lastUpdated;
     const sel=document.getElementById('sel-commodity');
     sel.innerHTML=manifest.commodities.map(c=>'<option value="'+c.file+'">'+c.commodity+'</option>').join('');
     await onCommodityChange();
   }catch(e){
-    ['tbl-world','tbl-us','tbl-custom1','tbl-custom2'].forEach(id=>{
-      document.getElementById(id).innerHTML='<div class="spinner" style="color:#c00">Error: '+e.message+'</div>';
-    });
+    for(let i=0;i<8;i++)
+      document.getElementById('tbl-'+i).innerHTML='<div class="spinner" style="color:#c00">Error: '+e.message+'</div>';
   }
 }
 
 async function onCommodityChange(){
   setLoading();
-  // Clear formula cache when commodity changes
   Object.keys(esFormulaCache).forEach(k=>delete esFormulaCache[k]);
-
   const file=document.getElementById('sel-commodity').value;
   const res=await fetch(BASE+'/'+file);
   currentData=await res.json();
@@ -314,44 +378,51 @@ async function onCommodityChange(){
   const regions=currentData.regions;
   document.getElementById('sel-region').innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
 
-  const worldR=findRegion(['world']);
-  const usR=findRegion(['united states','u.s.','usa']);
-  const others=regions.filter(r=>r!==worldR&&r!==usR);
-  ['sel-custom1','sel-custom2'].forEach((sid,i)=>{
-    const s=document.getElementById(sid);
-    s.innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
-    s.value=others[i]||regions[Math.min(i+2,regions.length-1)]||regions[0];
-  });
+  // Set each table's select options and pick default region
+  for(let i=0;i<8;i++){
+    const sel=document.getElementById('sel-t'+i);
+    sel.innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
+    const def=findRegionByKws(DEFAULT_REGIONS[i]);
+    tableRegions[i]=def||regions[0];
+    if(def) sel.value=def;
+  }
 
   const aSel=document.getElementById('sel-attribute');
   aSel.innerHTML=all_attrs_sorted.map(a=>'<option>'+a+'</option>').join('');
   const esIdx=all_attrs_sorted.findIndex(a=>/^ending.stock/i.test(a));
-  if(esIdx>=0)aSel.selectedIndex=esIdx;
+  if(esIdx>=0) aSel.selectedIndex=esIdx;
 
   activeYears=new Set(currentData.marketYears.slice(-5));
   buildPills(currentData.marketYears);
-  renderAllTables();
+
+  for(let i=0;i<8;i++) renderTable(i);
   renderSummaryAndPrediction();
-  renderCustomPredictions();
   renderChart();
+
+  // Update print metadata
+  document.getElementById('print-title').textContent=
+    'WASDE Balance Sheet — '+(currentData.commodity||'');
+  document.getElementById('print-meta').textContent=
+    'Data updated: '+manifest.lastUpdated+' | Next release prediction: '+NR_MONTH;
 }
 
 function setLoading(){
-  ['tbl-world','tbl-us','tbl-custom1','tbl-custom2',
-   'summary-text','prediction-text','cpred1','cpred2'].forEach(id=>{
-    document.getElementById(id).innerHTML='<div class="spinner">Loading...</div>';
-  });
+  for(let i=0;i<8;i++)
+    document.getElementById('tbl-'+i).innerHTML='<div class="spinner">Loading...</div>';
+  document.getElementById('summary-text').innerHTML='<div class="spinner">Loading...</div>';
+  document.getElementById('prediction-text').innerHTML='<div class="spinner">Loading...</div>';
 }
 
-function sortDedupeAttrs(attrs,tt){
+// ── Attribute helpers ─────────────────────────────────────────
+function sortDedupeAttrs(attrs, tt){
   const seen=new Map();
   attrs.forEach(a=>{
-    if(isExcluded(a,tt))return;
+    if(isExcluded(a,tt)) return;
     const norm=a.trim().toLowerCase().replace(/\s+/g,' ');
     if(!seen.has(norm)){seen.set(norm,a);}
     else{
       const ex=seen.get(norm);
-      if(a[0]===a[0].toUpperCase()&&ex[0]!==ex[0].toUpperCase())seen.set(norm,a);
+      if(a[0]===a[0].toUpperCase()&&ex[0]!==ex[0].toUpperCase()) seen.set(norm,a);
     }
   });
   return[...seen.values()].sort((a,b)=>attrSortKey(a)-attrSortKey(b));
@@ -363,18 +434,23 @@ function resolveAttr(attr){
   return currentData.attributes.find(a=>a.trim().toLowerCase().replace(/\s+/g,' ')===norm)||attr;
 }
 
+function tableTypeForIndex(i){
+  if(i===0)return'world';
+  if(i===1)return'us';
+  return'custom';
+}
+
+// ── Data helpers ──────────────────────────────────────────────
 function getSeries(region,attr,mktYear){
   const key=region+'||'+attr+'||'+mktYear;
-  if(currentData.data[key])return currentData.data[key].sort((a,b)=>a.releaseNum-b.releaseNum);
+  if(currentData.data[key]) return currentData.data[key].sort((a,b)=>a.releaseNum-b.releaseNum);
   const norm=key.toLowerCase().replace(/\s+/g,' ');
   const found=Object.keys(currentData.data).find(k=>k.toLowerCase().replace(/\s+/g,' ')===norm);
   return found?currentData.data[found].sort((a,b)=>a.releaseNum-b.releaseNum):[];
 }
-
 function validSeries(region,attr,mktYear){
   return getSeries(region,attr,mktYear).filter(d=>d.unitOk!==false);
 }
-
 function getCanonUnit(region,attr){
   if(!currentData.unitMap)return'';
   const key=region+'||'+attr;
@@ -382,17 +458,13 @@ function getCanonUnit(region,attr){
   const found=Object.keys(currentData.unitMap).find(k=>k.toLowerCase().replace(/\s+/g,' ')===norm);
   return found?currentData.unitMap[found]:'';
 }
-
-function findRegion(kws){
+function findRegionByKws(kws){
   return currentData.regions.find(r=>kws.some(k=>r.toLowerCase().includes(k)))||null;
 }
-
-function findAttrByPat(patterns,attrList){
-  const list=attrList||all_attrs_sorted;
-  for(const rx of patterns){const f=list.find(a=>rx.test(a.trim()));if(f)return resolveAttr(f);}
+function findAttrByPat(patterns){
+  for(const rx of patterns){const f=all_attrs_sorted.find(a=>rx.test(a.trim()));if(f)return resolveAttr(f);}
   return null;
 }
-
 function getLastNWasdeNums(n){
   const nums=new Set();
   Object.values(currentData.data).forEach(arr=>arr.forEach(d=>nums.add(d.wasdeNum)));
@@ -405,7 +477,7 @@ function fmtNum(v){
   return isNaN(n)?'—':n.toLocaleString(undefined,{maximumFractionDigits:2});
 }
 
-// ── Regression model ──────────────────────────────────────────
+// ── DIRECT prediction model (used for ALL attributes except ES) ──
 function linReg(xs,ys){
   const n=xs.length;if(n<2)return null;
   const mx=xs.reduce((a,b)=>a+b,0)/n,my=ys.reduce((a,b)=>a+b,0)/n;
@@ -417,6 +489,7 @@ function linReg(xs,ys){
 }
 
 function fitDirect(region,resolvedAttr,mktYear){
+  if(!resolvedAttr)return null;
   const series=validSeries(region,resolvedAttr,mktYear);
   if(series.length<2)return null;
   const xs=series.map(d=>d.releaseNum),ys=series.map(d=>d.value);
@@ -431,103 +504,75 @@ function fitDirect(region,resolvedAttr,mktYear){
     const atN1=ps.find(d=>d.releaseNum===nextX);
     if(atN&&atN1)moms.push(atN1.value-atN.value);
   });
-  let nextVal=regPred,method='linear regression';
+  let nextVal=regPred,method='regression';
   if(moms.length>=2){
     const avg=moms.reduce((a,b)=>a+b,0)/moms.length;
     nextVal=0.5*regPred+0.5*(lastVal+avg);
-    method='blended ('+moms.length+'yr hist)';
+    method='blended ('+moms.length+'yr)';
   }
   return{nextVal:Math.round(nextVal*100)/100,lastVal,method,isDerived:false};
 }
 
 function getPredVal(region,attrDisplay,mktYear){
   if(!attrDisplay)return null;
-  const ra=resolveAttr(attrDisplay);if(!ra)return null;
-  const m=fitDirect(region,ra,mktYear);
+  const m=fitDirect(region,resolveAttr(attrDisplay),mktYear);
   return m?m.nextVal:null;
 }
 
-// ── Empirical ES formula discovery ────────────────────────────
-// For a given region, examines recent actual data to discover which
-// attributes are additive vs subtractive in the ES identity.
-// ES = sum(additive attrs) - sum(subtractive attrs)
-// We know additive = {Beginning Stocks, Production, [Imports for non-World]}
-// We derive subtractive by: subtractive = additive_sum - ES (from actual data)
-// Then we check which combination of candidate use-attrs best explains that.
-
+// ── Empirical ES formula discovery ───────────────────────────
 function discoverESFormula(region){
-  if(esFormulaCache[region])return esFormulaCache[region];
+  if(esFormulaCache[region]!==undefined)return esFormulaCache[region];
 
   const esDispAttr=all_attrs_sorted.find(a=>/^ending.stock/i.test(a));
   if(!esDispAttr){esFormulaCache[region]=null;return null;}
   const esRA=resolveAttr(esDispAttr);
+  const bsRA  =findAttrByPat([/^beginning.stock/i]);
+  const prodRA=findAttrByPat([/^production/i]);
+  const impRA =isWorldReg(region)?null:findAttrByPat([/^import/i]);
 
-  // Additive (supply) components
-  const bsRA   = findAttrByPat([/^beginning.stock/i]);
-  const prodRA = findAttrByPat([/^production/i]);
-  const impRA  = isWorldReg(region)?null:findAttrByPat([/^import/i]);
-
-  // Candidate subtractive components: all non-derived, non-supply attrs
-  const candAttrs = all_attrs_sorted.filter(a=>{
+  // Candidate subtractive attributes
+  const candAttrs=all_attrs_sorted.filter(a=>{
     const t=a.trim();
-    return !isDerived(a) &&
-           !/^beginning.stock/i.test(t) &&
-           !/^production/i.test(t) &&
-           !/^import/i.test(t) &&
-           !/^area/i.test(t) &&
-           !/^yield/i.test(t) &&
-           !/avg.*farm.*price/i.test(t) &&
-           !/avg.*price/i.test(t);
+    return !isDerived(a)&&
+           !/^beginning.stock/i.test(t)&&
+           !/^production/i.test(t)&&
+           !/^import/i.test(t)&&
+           !/^area/i.test(t)&&
+           !/^yield/i.test(t)&&
+           !/avg.*price/i.test(t)&&
+           !/^output/i.test(t)&&
+           !/^trade/i.test(t);
   });
 
-  // Collect data points: for each (mktYear, wasdeNum) where we have ES + supply attrs
+  // Collect data points across last 5 mkt years
   const dataPoints=[];
   currentData.marketYears.slice(-5).forEach(yr=>{
     const esSer=validSeries(region,esRA,yr);
     esSer.forEach(esEntry=>{
       const wn=esEntry.wasdeNum;
       const esVal=esEntry.value;
-
       const getV=(ra)=>{
         if(!ra)return null;
         const s=getSeries(region,ra,yr);
         const e=s.find(d=>d.wasdeNum===wn);
         return(e&&e.unitOk!==false)?e.value:null;
       };
-
       const bs=getV(bsRA),prod=getV(prodRA);
       if(bs===null||prod===null)return;
       const imp=impRA?getV(impRA):null;
-
       const supply=bs+prod+(imp||0);
-      const impliedSub=supply-esVal;  // this is what the subtractive components should sum to
-
+      const impliedSub=supply-esVal;
       const compVals={};
-      candAttrs.forEach(a=>{
-        const v=getV(resolveAttr(a));
-        if(v!==null)compVals[a]=v;
-      });
-
-      dataPoints.push({yr,wn,esVal,supply,impliedSub,compVals});
+      candAttrs.forEach(a=>{const v=getV(resolveAttr(a));if(v!==null)compVals[a]=v;});
+      dataPoints.push({esVal,supply,impliedSub,compVals});
     });
   });
 
-  if(dataPoints.length<2){
-    esFormulaCache[region]=null;
-    return null;
-  }
+  if(dataPoints.length<3){esFormulaCache[region]=null;return null;}
 
-  // Find which subset of candAttrs best explains impliedSub across all data points
-  // Use a greedy forward-selection approach:
-  // Start with no components, add the one that reduces total error most, repeat.
-
-  const totalImplied=dataPoints.map(dp=>dp.impliedSub);
-  const avgImplied  =totalImplied.reduce((a,b)=>a+b,0)/totalImplied.length;
-
-  // Error function: mean absolute error across data points
-  function mae(compList){
+  function mae(comps){
     const errs=dataPoints.map(dp=>{
-      const sum=compList.reduce((s,a)=>s+(dp.compVals[a]||0),0);
+      const sum=comps.reduce((s,a)=>s+(dp.compVals[a]||0),0);
       return Math.abs(sum-dp.impliedSub);
     });
     return errs.reduce((a,b)=>a+b,0)/errs.length;
@@ -535,8 +580,7 @@ function discoverESFormula(region){
 
   let selected=[];
   let remaining=[...candAttrs.filter(a=>dataPoints.some(dp=>a in dp.compVals))];
-  let bestMAE=mae([]);  // baseline: 0 comps
-
+  let bestMAE=mae([]);
   let improved=true;
   while(improved&&remaining.length>0){
     improved=false;
@@ -545,118 +589,50 @@ function discoverESFormula(region){
       const err=mae([...selected,c]);
       if(err<bestErr){bestErr=err;bestComp=c;}
     }
-    if(bestComp){
-      selected.push(bestComp);
-      remaining=remaining.filter(c=>c!==bestComp);
-      bestMAE=bestErr;
-      improved=true;
-    }
+    if(bestComp){selected.push(bestComp);remaining=remaining.filter(c=>c!==bestComp);bestMAE=bestErr;improved=true;}
   }
 
-  // Build human-readable method label
-  const subNames=selected.map(a=>a.length>20?a.slice(0,18)+'…':a);
   const addParts=['BS','Prod'];
   if(impRA)addParts.push('Imp');
-  const methodLabel='derived ('+addParts.join('+')+' − '+subNames.slice(0,3).join('−')+
-                    (subNames.length>3?'−…':'')+')';
+  const subNames=selected.map(a=>a.length>18?a.slice(0,16)+'…':a);
+  const methodLabel='ES='+addParts.join('+')+' − '+subNames.slice(0,3).join('−')+(subNames.length>3?'−…':'');
 
-  // Compute formula accuracy on last data point for sanity check
-  const lastDP=dataPoints[dataPoints.length-1];
-  const checkSum=selected.reduce((s,a)=>s+(lastDP.compVals[a]||0),0);
-  const checkES=lastDP.supply-checkSum;
-  const checkErr=Math.abs(checkES-lastDP.esVal);
-
-  const formula={
-    bsRA, prodRA, impRA,
-    subAttrs: selected,
-    methodLabel,
-    includeImports: !!impRA,
-    lastCheckErr: checkErr,
-    lastCheckES: lastDP.esVal
-  };
+  const formula={bsRA,prodRA,impRA,subAttrs:selected,methodLabel,includeImports:!!impRA};
   esFormulaCache[region]=formula;
   return formula;
 }
 
-// ── Predict ES using discovered formula ───────────────────────
 function fitESPrediction(region,attrDisplay,mktYear){
   const formula=discoverESFormula(region);
   if(!formula)return null;
-
   const s=validSeries(region,resolveAttr(attrDisplay),mktYear);
   const lastVal=s.length?s[s.length-1].value:null;
-
-  const vBS  =getPredVal(region,formula.bsRA,mktYear);
+  const vBS=getPredVal(region,formula.bsRA,mktYear);
   const vProd=getPredVal(region,formula.prodRA,mktYear);
   if(vBS===null||vProd===null)return null;
-
   let supply=vBS+vProd;
-  if(formula.includeImports&&formula.impRA){
-    const vImp=getPredVal(region,formula.impRA,mktYear);
-    if(vImp!==null)supply+=vImp;
-  }
-
+  if(formula.includeImports&&formula.impRA){const vImp=getPredVal(region,formula.impRA,mktYear);if(vImp!==null)supply+=vImp;}
   let totalSub=0;
-  formula.subAttrs.forEach(a=>{
-    const v=getPredVal(region,a,mktYear);
-    if(v!==null)totalSub+=v;
-  });
-
-  const nextVal=Math.round((supply-totalSub)*100)/100;
-  return{nextVal,lastVal,method:formula.methodLabel,isDerived:true};
+  formula.subAttrs.forEach(a=>{const v=getPredVal(region,a,mktYear);if(v!==null)totalSub+=v;});
+  return{nextVal:Math.round((supply-totalSub)*100)/100,lastVal,method:formula.methodLabel,isDerived:true};
 }
 
-// ── Supply Total prediction ───────────────────────────────────
-function fitSupplyPrediction(region,attrDisplay,mktYear){
-  const s=validSeries(region,resolveAttr(attrDisplay),mktYear);
-  const lastVal=s.length?s[s.length-1].value:null;
-  const bsRA  =findAttrByPat([/^beginning.stock/i]);
-  const prodRA=findAttrByPat([/^production/i]);
-  const impRA =isWorldReg(region)?null:findAttrByPat([/^import/i]);
-  const vBS=getPredVal(region,bsRA,mktYear);
-  const vProd=getPredVal(region,prodRA,mktYear);
-  if(vBS===null||vProd===null)return null;
-  let supply=vBS+vProd;
-  let method='derived (BS+Prod';
-  if(impRA){const vImp=getPredVal(region,impRA,mktYear)||0;supply+=vImp;method+= '+Imp';}
-  method+=')';
-  return{nextVal:Math.round(supply*100)/100,lastVal,method,isDerived:true};
-}
-
-// ── Use Total prediction (sum of use components) ──────────────
-function fitUsePrediction(region,attrDisplay,mktYear){
-  const s=validSeries(region,resolveAttr(attrDisplay),mktYear);
-  const lastVal=s.length?s[s.length-1].value:null;
-  const useComps=all_attrs_sorted.filter(a=>{
-    const t=a.trim();
-    return !isDerived(a)&&(
-      /^crushing/i.test(t)||/^domestic.use/i.test(t)||/^domestic.disappear/i.test(t)||
-      /^domestic.*total/i.test(t)||/^biofuel/i.test(t)||/^food.*feed/i.test(t)||
-      /^food.*industrial/i.test(t)||/^export(?!s?,\s*total)/i.test(t)||
-      /^seed/i.test(t)||/^residual/i.test(t));
-  });
-  let total=0;
-  useComps.forEach(a=>{const v=getPredVal(region,a,mktYear);if(v!==null)total+=v;});
-  return{nextVal:Math.round(total*100)/100,lastVal,method:'derived (sum use comps)',isDerived:true};
-}
-
-// ── Main prediction dispatcher ────────────────────────────────
+// ── Main prediction dispatcher ─────────────────────────────
+// ONLY Ending Stocks is derived — everything else uses fitDirect
 function fitPrediction(region,attrDisplay,mktYear){
-  const a=attrDisplay.trim();
-  if(/^ending.stock/i.test(a))       return fitESPrediction(region,attrDisplay,mktYear);
-  if(/^supply.*(total|,\s*total)/i.test(a)||/^total.supply/i.test(a))
-                                      return fitSupplyPrediction(region,attrDisplay,mktYear);
-  if(/^use.*(total|,\s*total)/i.test(a)||/^total\s*use/i.test(a))
-                                      return fitUsePrediction(region,attrDisplay,mktYear);
+  if(isES(attrDisplay)) return fitESPrediction(region,attrDisplay,mktYear);
   return fitDirect(region,resolveAttr(attrDisplay),mktYear);
 }
 
-// ── Build table ───────────────────────────────────────────────
-function buildTable(region,tableType){
-  if(!region)return'<div class="no-data">Region not available for this commodity</div>';
-  const attrs  =sortDedupeAttrs(currentData.attributes,tableType);
-  const last2W =getLastNWasdeNums(2);
-  const last3Y =getLatestNMktYears(3);
+// ── Build single table ────────────────────────────────────────
+function buildTable(region, tableType){
+  if(!region)return'<div class="no-avail">Not available</div>';
+
+  const attrs   =sortDedupeAttrs(currentData.attributes,tableType);
+  if(!attrs.length)return'<div class="no-avail">No data</div>';
+
+  const last2W  =getLastNWasdeNums(2);
+  const last3Y  =getLatestNMktYears(3);
   const currentY=last3Y[last3Y.length-1];
 
   const wLabels={};
@@ -670,24 +646,21 @@ function buildTable(region,tableType){
   let h='<div class="tbl-scroll"><table class="bs"><thead>';
   h+='<tr><th class="ac" rowspan="2">Attribute</th>';
   last3Y.forEach(yr=>{h+='<th class="yg" colspan="'+last2W.length+'">'+yr+'</th>';});
-  h+='<th class="pg" rowspan="2" style="min-width:76px">Pred.<br>'+
-     '<span style="font-weight:400;font-size:9px">'+NR_MONTH+'</span><br>'+
-     '<span style="font-weight:400;font-size:9px">('+currentY+')</span></th></tr><tr>';
+  h+='<th class="pg" rowspan="2">Pred<br><span style="font-weight:400;font-size:8px">'+
+     NR_MONTH.split(' ')[0]+'<br>('+currentY+')</span></th></tr><tr>';
   last3Y.forEach(()=>last2W.forEach(wn=>{
-    h+='<th style="font-size:10px;font-weight:400;color:#777">'+(wLabels[wn]||'W'+wn)+'</th>';
+    h+='<th style="font-size:8px;font-weight:400;color:#777">'+(wLabels[wn]||'W'+wn)+'</th>';
   }));
   h+='</tr></thead><tbody>';
 
   let prevGroup=null;
   attrs.forEach(attr=>{
-    const ra     =resolveAttr(attr);
-    const grp    =attrGroup(attr);
-    const isES   =isEndingStocks(attr);
-    const isProd =isProduction(attr);
+    const ra    =resolveAttr(attr);
+    const grp   =attrGroup(attr);
     const derived=isDerived(attr);
-    const sepCls =(prevGroup!==null&&grp!==prevGroup)?' sep-top':'';
+    const sepCls=(prevGroup!==null&&grp!==prevGroup)?' sep-top':'';
     prevGroup=grp;
-    const hlCls=isES?' hl-es':isProd?' hl-prod':'';
+    const hlCls=isES(attr)?' hl-es':isProd(attr)?' hl-prod':'';
 
     h+='<tr class="'+sepCls+hlCls+'">';
     h+='<td class="an" title="'+attr+'">'+attr+(derived?' *':'')+'</td>';
@@ -721,11 +694,11 @@ function buildTable(region,tableType){
       const pct=model.lastVal&&model.lastVal!==0?(diff/Math.abs(model.lastVal))*100:0;
       const cls=diff>0?'up':diff<0?'dn':'';
       const sign=diff>=0?'+':'';
-      const tdCls=derived?'pv-derived':'pv';
+      const tdCls=derived?'pv-es':'pv';
       h+='<td class="'+tdCls+'">'+fmtNum(model.nextVal)+
          (Math.abs(pct)>=0.05&&Math.abs(pct)<300?'<br><span class="chg '+cls+'">'+sign+pct.toFixed(1)+'%</span>':'')+'</td>';
     }else{
-      h+='<td class="'+(derived?'pv-derived':'pv')+'">—</td>';
+      h+='<td class="'+(derived?'pv-es':'pv')+'">—</td>';
     }
     h+='</tr>';
   });
@@ -734,34 +707,27 @@ function buildTable(region,tableType){
   h+='<div class="tbl-legend">'+
      '<div class="tll"><div class="tll-box" style="background:#fef9e7;border:1px solid #f5c518"></div>Ending Stocks</div>'+
      '<div class="tll"><div class="tll-box" style="background:#e8f5e9;border:1px solid #81c784"></div>Production</div>'+
-     '<div class="tll"><span style="color:#1e40af;font-style:italic">* derived (formula learned from data)</span></div>'+
+     '<div class="tll"><span style="color:#1e40af">* empirical formula</span></div>'+
      '</div>';
   return h;
 }
 
-function renderAllTables(){
-  const worldR=findRegion(['world']);
-  const usR=findRegion(['united states','u.s.','usa']);
-  document.getElementById('tbl-world').innerHTML=buildTable(worldR,'world');
-  document.getElementById('tbl-us').innerHTML=buildTable(usR,'us');
-  renderCustomTable(1);
-  renderCustomTable(2);
-}
-function renderCustomTable(n){
+function renderTable(i){
   if(!currentData)return;
-  const region=document.getElementById('sel-custom'+n).value;
-  document.getElementById('tbl-custom'+n).innerHTML=buildTable(region,'custom');
-  renderCustomPrediction(n);
+  const sel=document.getElementById('sel-t'+i);
+  const region=sel?sel.value:tableRegions[i];
+  tableRegions[i]=region;
+  const tt=tableTypeForIndex(i);
+  document.getElementById('tbl-'+i).innerHTML=buildTable(region,tt);
 }
 
-// ── Summary + prediction ──────────────────────────────────────
+// ── Summary + prediction (World & US only) ───────────────────
 function renderSummaryAndPrediction(){
   const last2W=getLastNWasdeNums(2);
   const last3Y=getLatestNMktYears(3);
   const currentY=last3Y[last3Y.length-1];
-  const worldR=findRegion(['world']);
-  const usR=findRegion(['united states','u.s.','usa']);
-
+  const worldR=findRegionByKws(DEFAULT_REGIONS[0]);
+  const usR   =findRegionByKws(DEFAULT_REGIONS[1]);
   if(last2W.length<2){
     document.getElementById('summary-text').innerHTML='<p>Need at least 2 releases.</p>';
     document.getElementById('prediction-text').innerHTML='<p>Need more data.</p>';
@@ -789,18 +755,17 @@ function renderSummaryAndPrediction(){
   changes.sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct));
 
   let sumH='';
-  if(!changes.length){sumH='<p>No significant changes (&ge;0.5%) for '+currentY+'.</p>';}
+  if(!changes.length){sumH='<p>No significant changes for '+currentY+'.</p>';}
   else{
     const top=changes.slice(0,8);
     const ups=top.filter(c=>c.diff>0).length,dns=top.filter(c=>c.diff<0).length;
-    sumH='<p style="font-size:12px;color:#555;margin-bottom:.5rem">'+currentY+
-         ': <strong>'+ups+'</strong> up, <strong>'+dns+'</strong> down.</p><ul>';
+    sumH='<p style="font-size:11px;color:#555;margin-bottom:.4rem">'+currentY+': <strong>'+ups+'</strong> up, <strong>'+dns+'</strong> down.</p><ul>';
     top.forEach(c=>{
       const tag=c.diff>0?'<span class="tag-up">+'+c.pct.toFixed(1)+'%</span>':'<span class="tag-dn">'+c.pct.toFixed(1)+'%</span>';
       sumH+='<li>'+tag+' <strong>'+c.attr+'</strong> ('+c.region+'): '+fmtNum(c.prev)+' → '+fmtNum(c.curr)+' '+c.unit+'</li>';
     });
     sumH+='</ul>';
-    if(changes.length>8)sumH+='<p style="font-size:11px;color:#888;margin-top:.3rem">+'+(changes.length-8)+' more</p>';
+    if(changes.length>8)sumH+='<p style="font-size:10px;color:#888;margin-top:.3rem">+'+(changes.length-8)+' more</p>';
   }
   document.getElementById('summary-text').innerHTML=sumH;
 
@@ -829,53 +794,14 @@ function renderSummaryAndPrediction(){
     bigMoves.slice(0,9).forEach(m=>{
       const sign=m.pct>=0?'+':'';
       const tag=m.pct>0?'<span class="tag-up">'+sign+m.pct.toFixed(1)+'%</span>':'<span class="tag-dn">'+m.pct.toFixed(1)+'%</span>';
-      const dlab=m.isDerived?' <span style="font-size:9px;color:#1e40af">[derived]</span>':'';
+      const dlab=m.isDerived?' <span style="font-size:9px;color:#1e40af">[ES formula]</span>':'';
       predH+='<li>'+tag+' <strong>'+m.attr+'</strong>'+dlab+' ('+m.region+'): '+
              fmtNum(m.lastVal)+' → '+fmtNum(m.nextVal)+' '+m.unit+
-             ' <span style="font-size:10px;color:#aaa">('+m.method+')</span></li>';
+             ' <span style="font-size:9px;color:#aaa">('+m.method+')</span></li>';
     });
-    predH+='</ul><p class="model-note">Ending Stocks formula is learned from actual data per commodity/region. '+NR_MONTH+'. Directional only.</p>';
+    predH+='</ul><p class="model-note">Only Ending Stocks uses empirical formula. All other attributes use blended regression. '+NR_MONTH+'.</p>';
   }
   document.getElementById('prediction-text').innerHTML=predH;
-}
-
-function buildPredictionPanel(region){
-  if(!region)return'<div class="no-data">No region selected</div>';
-  const currentY=getLatestNMktYears(3).slice(-1)[0];
-  const bigMoves=[];
-  all_attrs_sorted.forEach(attr=>{
-    const model=fitPrediction(region,attr,currentY);
-    if(!model||model.nextVal===null||model.lastVal===null)return;
-    const pct=model.lastVal!==0?((model.nextVal-model.lastVal)/Math.abs(model.lastVal))*100:0;
-    if(Math.abs(pct)>=0.5&&Math.abs(pct)<300){
-      const ra=resolveAttr(attr);
-      const s=getSeries(region,ra,currentY);
-      bigMoves.push({attr,lastVal:model.lastVal,nextVal:model.nextVal,pct,
-                     method:model.method,isDerived:model.isDerived,
-                     unit:getCanonUnit(region,ra)||(s[s.length-1]?.unit||'')});
-    }
-  });
-  bigMoves.sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct));
-  if(!bigMoves.length)return'<p style="font-size:12px;color:#888">Minimal changes expected.</p>';
-  let h='<ul style="padding-left:1rem;list-style:disc">';
-  bigMoves.slice(0,6).forEach(m=>{
-    const sign=m.pct>=0?'+':'';
-    const tag=m.pct>0?'<span class="tag-up">'+sign+m.pct.toFixed(1)+'%</span>':'<span class="tag-dn">'+m.pct.toFixed(1)+'%</span>';
-    const dlab=m.isDerived?' <span style="font-size:9px;color:#1e40af">[derived]</span>':'';
-    h+='<li style="font-size:12px;line-height:1.8">'+tag+' <strong>'+m.attr+'</strong>'+dlab+': '+
-       fmtNum(m.lastVal)+' → '+fmtNum(m.nextVal)+' '+m.unit+
-       ' <span style="font-size:10px;color:#aaa">('+m.method+')</span></li>';
-  });
-  h+='</ul><p class="model-note">'+NR_MONTH+'. Directional only.</p>';
-  return h;
-}
-
-function renderCustomPredictions(){renderCustomPrediction(1);renderCustomPrediction(2);}
-function renderCustomPrediction(n){
-  if(!currentData)return;
-  const region=document.getElementById('sel-custom'+n).value;
-  document.getElementById('cpred'+n+'-title').textContent=(region||'Custom Region '+n)+' — Next Release Prediction';
-  document.getElementById('cpred'+n).innerHTML=buildPredictionPanel(region);
 }
 
 // ── Chart ─────────────────────────────────────────────────────
@@ -908,7 +834,7 @@ function renderChart(){
       data:series.map(p=>({x:p.releaseNum,y:p.value,reportDate:p.reportDate,wasdeNum:p.wasdeNum})),
       borderColor:COLORS[i%COLORS.length],
       backgroundColor:COLORS[i%COLORS.length]+'18',
-      borderWidth:2,pointRadius:3,pointHoverRadius:6,tension:0.3,fill:false
+      borderWidth:2,pointRadius:3,pointHoverRadius:5,tension:0.3,fill:false
     });
   });
 
@@ -921,7 +847,7 @@ function renderChart(){
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{position:'top',labels:{font:{size:11},boxWidth:12}},
+        legend:{position:'top',labels:{font:{size:10},boxWidth:10}},
         tooltip:{callbacks:{
           title:ctx=>'Release '+(ctx[0].parsed.x+1),
           afterBody:ctx=>'WASDE #'+ctx[0].raw.wasdeNum+'  —  '+ctx[0].raw.reportDate,
@@ -929,8 +855,8 @@ function renderChart(){
         }}
       },
       scales:{
-        x:{title:{display:true,text:'Release number (months since first forecast)',font:{size:11}}},
-        y:{title:{display:true,text:unit,font:{size:11}},ticks:{callback:v=>v.toLocaleString()}}
+        x:{title:{display:true,text:'Release number',font:{size:10}}},
+        y:{title:{display:true,text:unit,font:{size:10}},ticks:{callback:v=>v.toLocaleString()}}
       }
     }
   });
