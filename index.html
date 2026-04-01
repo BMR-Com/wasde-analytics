@@ -21,10 +21,9 @@ select.wide{min-width:200px}
 .section{padding:1rem 1.5rem;max-width:1500px;margin:0 auto}
 .sec-title{font-size:11px;font-weight:600;color:#1a2e1a;margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.08em;border-left:3px solid #1a2e1a;padding-left:.5rem}
 
-/* 4 tables per row on screen */
-.tables-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem;margin-bottom:.75rem}
-@media(max-width:900px){.tables-row{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:500px){.tables-row{grid-template-columns:1fr}}
+/* 2 tables per row on screen */
+.tables-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-bottom:1rem}
+@media(max-width:700px){.tables-row{grid-template-columns:1fr}}
 
 .table-card{background:#fff;border:1px solid #e5e5e0;border-radius:8px;overflow:hidden}
 .tc-head{background:#1a2e1a;color:#fff;padding:.4rem .75rem;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:space-between;gap:.4rem;flex-wrap:wrap}
@@ -79,78 +78,74 @@ table.bs tr:last-child td{border-bottom:none}
 
 /* ── Print styles ──────────────────────────────────────────── */
 @media print {
-  @page{size:A4 landscape;margin:7mm 7mm 7mm 7mm}
+  @page{size:A4 landscape;margin:8mm 8mm 8mm 8mm}
   body{background:#fff;color:#000;font-size:8px}
 
-  /* Hide screen-only chrome */
-  header,.nrbar,.top-controls,.print-btn,.tc-head select,
-  .pills,.pills-lbl{display:none!important}
+  /* Hide screen chrome */
+  header,.nrbar,.top-controls,.print-btn,
+  .tc-head select,.pills,.pills-lbl{display:none!important}
 
   .section{padding:0;max-width:100%}
   .sec-title{font-size:8px;margin-bottom:3px;padding-left:4px;border-left-width:2px}
 
-  /* ── Page 1: Row 1 tables (top 4) ── */
-  .tables-row.row-1{
-    display:grid;
-    grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:3px;
-    margin-bottom:3px;
-    page-break-after:always;
+  /* All table rows: always 2 per row */
+  .tables-row{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:5px!important;
+    margin-bottom:5px!important;
   }
 
-  /* ── Page 2: Row 2 tables (bottom 4) + summary ── */
-  .tables-row.row-2{
-    display:grid;
-    grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:3px;
-    margin-bottom:4px;
-    page-break-before:auto;
-  }
+  /* Page 1: rows 1 + 2 (World+USA, Brazil+China) */
+  .row-1{page-break-before:auto}
+  .row-2{page-break-after:always}
 
-  .table-card{border:0.5px solid #999;border-radius:0;break-inside:avoid}
-  .tc-head{padding:2px 4px;font-size:7px}
-  table.bs{font-size:6.5px}
-  table.bs th{padding:1px 3px;font-size:6px}
-  table.bs th.ac{min-width:75px;max-width:90px}
-  table.bs td{padding:1px 3px;font-size:6.5px}
-  table.bs td.an{max-width:90px}
-  .tbl-legend{font-size:7px;padding:2px 4px}
-  .chg{font-size:6px}
-  .pv,.pv-es{font-size:6.5px}
+  /* Page 2: rows 3 + 4 (WlC+India, EU+Russia) */
+  .row-3{page-break-before:auto}
+  .row-4{page-break-after:always}
 
-  /* Summary card — show on page 2 after row-2 tables */
+  /* Page 3: Summary + Chart */
   .summary-card{
     display:block!important;
-    border:0.5px solid #999;
-    border-radius:0;
-    padding:5px;
-    margin-bottom:4px;
+    border:0.5px solid #999;border-radius:0;
+    padding:7px;margin-bottom:6px;
     break-inside:avoid;
+    page-break-before:auto;
   }
-  .summary-card .sec-title{font-size:7.5px;margin-bottom:3px}
-  .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:3px}
-  .sb h4{font-size:7px;margin-bottom:2px;padding-bottom:2px}
-  .sb li{font-size:7px;line-height:1.5}
-  .sb p{font-size:7px}
-  .model-note{font-size:6.5px}
+  .summary-card .sec-title{font-size:8px;margin-bottom:4px}
+  .summary-grid{display:grid!important;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+  .sb h4{font-size:7.5px;margin-bottom:3px;padding-bottom:2px}
+  .sb ul{padding-left:12px}
+  .sb li{font-size:7.5px;line-height:1.6}
+  .sb p{font-size:7.5px;line-height:1.5}
+  .model-note{font-size:7px}
   .tag-up,.tag-dn{font-size:7px;padding:0 3px}
 
-  /* Chart — show on page 2 after summary */
   .chart-card{
     display:block!important;
-    border:0.5px solid #999;
-    border-radius:0;
-    padding:5px;
-    margin-bottom:0;
+    border:0.5px solid #999;border-radius:0;
+    padding:7px;margin-bottom:0;
     break-inside:avoid;
   }
-  .chart-card .sec-title{font-size:7.5px;margin-bottom:3px}
-  .chart-controls{display:none!important}  /* hide dropdowns in print */
-  #chart-container{height:180px!important}
+  .chart-card .sec-title{font-size:8px;margin-bottom:4px}
+  .chart-controls{display:none!important}
+  #chart-container{height:220px!important;position:relative!important}
 
-  /* Print header */
-  .print-title{display:block!important;font-size:10px;font-weight:700;text-align:center;margin-bottom:2px;color:#000}
-  .print-meta{display:block!important;font-size:7px;text-align:center;color:#444;margin-bottom:5px}
+  /* Table element styles */
+  .table-card{border:0.5px solid #999;border-radius:0;break-inside:avoid}
+  .tc-head{padding:3px 5px;font-size:8px}
+  table.bs{font-size:7px;table-layout:fixed;width:100%}
+  table.bs th{padding:2px 4px;font-size:6.5px;white-space:nowrap}
+  table.bs th.ac{min-width:110px;max-width:130px}
+  table.bs td{padding:1.5px 4px;font-size:7px;white-space:nowrap}
+  table.bs td.an{max-width:130px;overflow:hidden;text-overflow:ellipsis}
+  .tbl-legend{font-size:7px;padding:2px 5px}
+  .chg{font-size:6.5px}
+  .pv,.pv-es{font-size:7px}
+
+  /* Print-only title block */
+  .print-title{display:block!important;font-size:11px;font-weight:700;text-align:center;margin-bottom:2px;color:#000}
+  .print-meta{display:block!important;font-size:7.5px;text-align:center;color:#444;margin-bottom:6px}
 }
 @media screen{
   .print-title,.print-meta{display:none}
@@ -192,42 +187,50 @@ table.bs tr:last-child td{border-bottom:none}
 
   <div class="sec-title">Balance Sheet — Last 2 Releases × 3 Latest Marketing Years</div>
 
-  <!-- Row 1: World, USA, Brazil, China -->
+  <!-- Row 1: World + USA -->
   <div class="tables-row row-1">
     <div class="table-card">
-      <div class="tc-head"><span id="lbl-t0">World</span><select id="sel-t0" onchange="renderTable(0)"></select></div>
+      <div class="tc-head"><span>World</span><select id="sel-t0" onchange="renderTable(0)"></select></div>
       <div id="tbl-0"><div class="spinner">Loading...</div></div>
     </div>
     <div class="table-card">
-      <div class="tc-head"><span id="lbl-t1">United States</span><select id="sel-t1" onchange="renderTable(1)"></select></div>
+      <div class="tc-head"><span>United States</span><select id="sel-t1" onchange="renderTable(1)"></select></div>
       <div id="tbl-1"><div class="spinner">Loading...</div></div>
     </div>
+  </div>
+
+  <!-- Row 2: Brazil + China -->
+  <div class="tables-row row-2">
     <div class="table-card">
-      <div class="tc-head"><span id="lbl-t2">Brazil</span><select id="sel-t2" onchange="renderTable(2)"></select></div>
+      <div class="tc-head"><span>Brazil</span><select id="sel-t2" onchange="renderTable(2)"></select></div>
       <div id="tbl-2"><div class="spinner">Loading...</div></div>
     </div>
     <div class="table-card">
-      <div class="tc-head"><span id="lbl-t3">China</span><select id="sel-t3" onchange="renderTable(3)"></select></div>
+      <div class="tc-head"><span>China</span><select id="sel-t3" onchange="renderTable(3)"></select></div>
       <div id="tbl-3"><div class="spinner">Loading...</div></div>
     </div>
   </div>
 
-  <!-- Row 2: World less China, India, EU, Russia -->
-  <div class="tables-row row-2">
+  <!-- Row 3: World less China + India -->
+  <div class="tables-row row-3">
     <div class="table-card">
-      <div class="tc-head"><span id="lbl-t4">World less China</span><select id="sel-t4" onchange="renderTable(4)"></select></div>
+      <div class="tc-head"><span>World less China</span><select id="sel-t4" onchange="renderTable(4)"></select></div>
       <div id="tbl-4"><div class="spinner">Loading...</div></div>
     </div>
     <div class="table-card">
-      <div class="tc-head"><span id="lbl-t5">India</span><select id="sel-t5" onchange="renderTable(5)"></select></div>
+      <div class="tc-head"><span>India</span><select id="sel-t5" onchange="renderTable(5)"></select></div>
       <div id="tbl-5"><div class="spinner">Loading...</div></div>
     </div>
+  </div>
+
+  <!-- Row 4: EU + Russia -->
+  <div class="tables-row row-4">
     <div class="table-card">
-      <div class="tc-head"><span id="lbl-t6">European Union</span><select id="sel-t6" onchange="renderTable(6)"></select></div>
+      <div class="tc-head"><span>European Union</span><select id="sel-t6" onchange="renderTable(6)"></select></div>
       <div id="tbl-6"><div class="spinner">Loading...</div></div>
     </div>
     <div class="table-card">
-      <div class="tc-head"><span id="lbl-t7">Russia</span><select id="sel-t7" onchange="renderTable(7)"></select></div>
+      <div class="tc-head"><span>Russia</span><select id="sel-t7" onchange="renderTable(7)"></select></div>
       <div id="tbl-7"><div class="spinner">Loading...</div></div>
     </div>
   </div>
