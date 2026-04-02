@@ -75,6 +75,17 @@ table.bs tr:last-child td{border-bottom:none}
 .print-btn{background:#1a2e1a;color:#fff;border:none;padding:.5rem 1.2rem;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px}
 .print-btn:hover{background:#2a4a2a}
 .no-avail{font-size:10px;color:#bbb;padding:.75rem;text-align:center}
+/* 6-panel chart styles */
+.chart-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem}
+@media(max-width:900px){.chart-row{grid-template-columns:1fr}}
+.chart-card{background:#fff;border:1px solid #e5e5e0;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.chart-card-head{background:#1a2e1a;padding:.35rem .65rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;min-height:30px}
+.chart-region-lbl{color:#fff;font-size:10px;font-weight:600;white-space:nowrap}
+.chart-attr-lbl{color:#9fe1cb;font-size:10px}
+.chart-sel-region,.chart-sel-attr{background:#2a4a2a;color:#fff;border:1px solid #3a6a3a;border-radius:4px;padding:1px 4px;font-size:10px;cursor:pointer;flex:1;min-width:0}
+.chart-sel-region option,.chart-sel-attr option{background:#1a2e1a}
+.pred-badge{font-size:9.5px;padding:2px 7px;background:#fffbf0;color:#7a5000;border-bottom:1px solid #e8d8a0;min-height:18px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chart-box{position:relative;height:200px;padding:4px}
 
 /* ── Print styles ──────────────────────────────────────────── */
 @media print {
@@ -121,15 +132,13 @@ table.bs tr:last-child td{border-bottom:none}
   .model-note{font-size:7px}
   .tag-up,.tag-dn{font-size:7px;padding:0 3px}
 
-  .chart-card{
-    display:block!important;
-    border:0.5px solid #999;border-radius:0;
-    padding:7px;margin-bottom:0;
-    break-inside:avoid;
-  }
-  .chart-card .sec-title{font-size:8px;margin-bottom:4px}
-  .chart-controls{display:none!important}
-  #chart-container{height:220px!important;position:relative!important}
+  .chart-row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important;margin-bottom:5px!important;page-break-inside:avoid}
+  .chart-card{border:0.5px solid #999;border-radius:0;break-inside:avoid;page-break-inside:avoid}
+  .chart-card-head{padding:2px 5px}
+  .chart-region-lbl,.chart-attr-lbl{font-size:7px}
+  .chart-sel-region,.chart-sel-attr{display:none!important}
+  .pred-badge{font-size:7px;padding:1px 5px;min-height:14px}
+  .chart-box{height:130px!important;padding:2px}
 
   /* Table element styles */
   .table-card{border:0.5px solid #999;border-radius:0;break-inside:avoid}
@@ -255,23 +264,63 @@ table.bs tr:last-child td{border-bottom:none}
   </div>
 
   <!-- Chart -->
-  <div class="chart-card">
-    <div class="sec-title">Forecast Evolution Chart</div>
-    <div class="chart-controls">
-      <div class="ctrl">
-        <label>Region</label>
-        <select id="sel-region" onchange="renderChart()"></select>
-      </div>
-      <div class="ctrl">
-        <label>Attribute</label>
-        <select id="sel-attribute" onchange="renderChart()"></select>
-      </div>
+  <!-- 6 Evolution Charts: 3 USA fixed + 3 World with dropdowns -->
+  <div class="sec-title" style="margin-top:.5rem">Forecast Evolution Charts</div>
+
+  <!-- USA fixed charts -->
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-card-head"><span class="chart-region-lbl">USA</span><span class="chart-attr-lbl" id="lbl-c0"></span></div>
+      <div class="pred-badge" id="pred-c0"></div>
+      <div class="chart-box"><canvas id="c0"></canvas></div>
     </div>
-    <div class="pills-lbl">Marketing Years</div>
-    <div class="pills" id="mkt-pills"></div>
-    <div id="chart-container"><canvas id="myChart"></canvas></div>
+    <div class="chart-card">
+      <div class="chart-card-head"><span class="chart-region-lbl">USA</span><span class="chart-attr-lbl" id="lbl-c1"></span></div>
+      <div class="pred-badge" id="pred-c1"></div>
+      <div class="chart-box"><canvas id="c1"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-head"><span class="chart-region-lbl">USA</span><span class="chart-attr-lbl" id="lbl-c2"></span></div>
+      <div class="pred-badge" id="pred-c2"></div>
+      <div class="chart-box"><canvas id="c2"></canvas></div>
+    </div>
   </div>
-</div>
+
+  <!-- World charts with dropdowns -->
+  <div class="chart-row" style="margin-top:.75rem">
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <select id="csel-r3" class="chart-sel-region" onchange="renderSixCharts()"></select>
+        <select id="csel-a3" class="chart-sel-attr" onchange="renderSixCharts()"></select>
+      </div>
+      <div class="pred-badge" id="pred-c3"></div>
+      <div class="chart-box"><canvas id="c3"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <select id="csel-r4" class="chart-sel-region" onchange="renderSixCharts()"></select>
+        <select id="csel-a4" class="chart-sel-attr" onchange="renderSixCharts()"></select>
+      </div>
+      <div class="pred-badge" id="pred-c4"></div>
+      <div class="chart-box"><canvas id="c4"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <select id="csel-r5" class="chart-sel-region" onchange="renderSixCharts()"></select>
+        <select id="csel-a5" class="chart-sel-attr" onchange="renderSixCharts()"></select>
+      </div>
+      <div class="pred-badge" id="pred-c5"></div>
+      <div class="chart-box"><canvas id="c5"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Marketing year pills (shared) -->
+  <div style="margin-top:.5rem">
+    <div class="pills-lbl">Marketing Years (all charts)</div>
+    <div class="pills" id="mkt-pills"></div>
+  </div>
+
+</div><!-- end .section -->
 
 <script>
 const BASE   = './data';
@@ -395,7 +444,7 @@ function getNextReleaseInfo(){
   };
 }
 
-let manifest=null,currentData=null,chart=null;
+let manifest=null,currentData=null;
 let activeYears=new Set(),all_attrs_sorted=[],NR_MONTH='';
 const esFormulaCache={};
 // Current region for each of 8 table slots
@@ -460,6 +509,8 @@ async function onCommodityChange(){
   for(let i=0;i<8;i++) renderTable(i);
   hideEmptyRows();
   renderSummaryAndPrediction();
+  initChartSelects();
+  renderSixCharts();
   renderChart();
 
   // Update print metadata
@@ -548,7 +599,7 @@ function linReg(xs,ys){
   const den=xs.reduce((s,x)=>s+(x-mx)**2,0);
   if(den===0)return null;
   const b=num/den,a=my-b*mx;
-  return{predict:x=>a+b*x};
+  return{a,b,predict:x=>a+b*x};
 }
 
 function fitDirect(region,resolvedAttr,mktYear){
@@ -905,7 +956,287 @@ function renderSummaryAndPrediction(){
   document.getElementById('prediction-text').innerHTML=predH;
 }
 
-// ── Chart ─────────────────────────────────────────────────────
+// ── 6-panel chart system ──────────────────────────────────────
+const sixCharts = new Array(6).fill(null); // Chart.js instances
+
+// USA fixed: attributes in priority order
+const USA_ATTRS = [
+  [/^area.*(planted|seeded)/i, 'Area Planted'],
+  [/^production/i,             'Production'],
+  [/^ending.stock/i,           'Ending Stocks'],
+];
+
+// World default attributes (in priority order)
+const WORLD_ATTRS = [
+  [/^production/i,                                        'Production'],
+  [/^domestic.*total/i,/^domestic.use/i,/^domestic/i,   'Domestic Use'],
+  [/^ending.stock/i,                                      'Ending Stocks'],
+];
+
+function findAttrMatch(patterns) {
+  if(!Array.isArray(patterns)) patterns=[patterns];
+  for(const rx of patterns){
+    const f=all_attrs_sorted.find(a=>rx.test(a.trim()));
+    if(f)return resolveAttr(f);
+  }
+  return null;
+}
+
+function initChartSelects(){
+  if(!currentData)return;
+  const regions=currentData.regions;
+  const worldR=findRegionByKws(DEFAULT_REGIONS[0]);
+
+  for(let i=3;i<=5;i++){
+    const rSel=document.getElementById('csel-r'+i);
+    const aSel=document.getElementById('csel-a'+i);
+    if(rSel){
+      rSel.innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
+      if(worldR) rSel.value=worldR;
+    }
+    if(aSel){
+      aSel.innerHTML=all_attrs_sorted.map(a=>'<option>'+a+'</option>').join('');
+      // Default attributes for world panels 3,4,5
+      const defAttr=findAttrMatch(WORLD_ATTRS[i-3]);
+      if(defAttr&&aSel) aSel.value=defAttr;
+    }
+  }
+}
+
+// ── Dual prediction engine ────────────────────────────────────
+// Method 1: Historical MoM regression (train on first 12 yrs, test on next 4)
+// For the CURRENT release position R, predict value at R+1 using
+// average MoM change at position R across training years.
+//
+// Method 2: Ratio evolution (serial correlation)
+// For position R, find which historical release position P ≤ R
+// has highest correlation with R+1 value across training years.
+// Use linear regression: value[R+1] ~ a + b*value[P]
+//
+// Pick method with lower RMSE on the 4-year test set.
+
+function dualPredict(region, resolvedAttr, mktYear){
+  const allYears=[...currentData.marketYears].sort();
+  const trainYears=allYears.slice(0,-4);  // first N-4 years
+  const testYears =allYears.slice(-4,-1); // last 4 years before current
+
+  // Current series
+  const curSeries=validSeries(region,resolvedAttr,mktYear);
+  if(curSeries.length<1)return null;
+  const curR=curSeries[curSeries.length-1].releaseNum;
+  const curVal=curSeries[curSeries.length-1].value;
+  const nextR=curR+1;
+
+  // Helper: get value at release R for a given year
+  function valAt(yr,r){
+    const s=validSeries(region,resolvedAttr,yr);
+    const e=s.find(d=>d.releaseNum===r);
+    return e?e.value:null;
+  }
+
+  // ── Method 1: MoM change regression ──────────────────────
+  // Collect MoM change at curR across all years
+  function getMoMChanges(years){
+    const changes=[];
+    years.forEach(yr=>{
+      const vR=valAt(yr,curR), vR1=valAt(yr,nextR);
+      if(vR!==null&&vR1!==null) changes.push(vR1-vR);
+    });
+    return changes;
+  }
+  const trainChanges=getMoMChanges(trainYears);
+  let m1Pred=null,m1RMSE=Infinity;
+  if(trainChanges.length>=2){
+    const avgChange=trainChanges.reduce((a,b)=>a+b,0)/trainChanges.length;
+    m1Pred=curVal+avgChange;
+    // RMSE on test years
+    const testErrors=getMoMChanges(testYears).map((ch,idx)=>{
+      const vR=valAt(testYears[idx],curR);
+      if(vR===null)return null;
+      return (vR+avgChange)-(vR+ch); // predicted - actual
+    }).filter(e=>e!==null);
+    if(testErrors.length)
+      m1RMSE=Math.sqrt(testErrors.reduce((s,e)=>s+e*e,0)/testErrors.length);
+  }
+
+  // ── Method 2: Ratio evolution ─────────────────────────────
+  // For each candidate release position P (1…curR):
+  //   avg_ratio = mean(value[R+1] / value[P]) across training years
+  //   predicted = current_value[P] * avg_ratio
+  // Test on holdout years. Pick P with lowest RMSE.
+  let bestP2=1, bestRatio=1, bestM2RMSE=Infinity;
+
+  for(let p=1;p<=curR;p++){
+    const trainRatios=trainYears.map(yr=>{
+      const vP=valAt(yr,p), vR1=valAt(yr,nextR);
+      return(vP&&vP!==0&&vR1!==null)?(vR1/vP):null;
+    }).filter(r=>r!==null);
+    if(trainRatios.length<2) continue;
+    const avgRatio=trainRatios.reduce((a,b)=>a+b,0)/trainRatios.length;
+    // Test RMSE
+    const testErrs=testYears.map(yr=>{
+      const vP=valAt(yr,p), actual=valAt(yr,nextR);
+      if(!vP||vP===0||actual===null) return null;
+      return (vP*avgRatio)-actual;
+    }).filter(e=>e!==null);
+    if(!testErrs.length) continue;
+    const rmse=Math.sqrt(testErrs.reduce((s,e)=>s+e*e,0)/testErrs.length);
+    if(rmse<bestM2RMSE){bestM2RMSE=rmse; bestP2=p; bestRatio=avgRatio;}
+  }
+
+  let m2Pred=null, m2RMSE=bestM2RMSE;
+  if(bestM2RMSE<Infinity){
+    const curAtBestP=valAt(mktYear,bestP2)??curVal;
+    m2Pred=curAtBestP*bestRatio;
+  }
+
+  // Pick best method
+  let predVal,method;
+  if(m1Pred!==null&&m2Pred!==null){
+    if(m1RMSE<=m2RMSE){
+      predVal=m1Pred;
+      method='MoM avg (RMSE='+m1RMSE.toFixed(2)+')';
+    }else{
+      predVal=m2Pred;
+      method='Ratio ×'+bestRatio.toFixed(3)+' from R'+bestP2+' (RMSE='+m2RMSE.toFixed(2)+')';
+    }
+  }else if(m1Pred!==null){predVal=m1Pred;method='MoM avg';}
+  else if(m2Pred!==null){predVal=m2Pred;method='Ratio from R'+bestP2;}
+  else return null;
+
+  return{
+    predVal:Math.round(predVal*100)/100,
+    lastVal:curVal,
+    nextR,
+    method,
+    m1:{pred:m1Pred,rmse:m1RMSE},
+    m2:{pred:m2Pred,rmse:m2RMSE,bestP,corr:bestCorr}
+  };
+}
+
+// ── Render one of the 6 chart panels ──────────────────────────
+function renderOneChart(idx, region, resolvedAttr, attrLabel){
+  const canvas=document.getElementById('c'+idx);
+  const badge=document.getElementById('pred-c'+idx);
+  if(!canvas||!region||!resolvedAttr){
+    if(badge)badge.textContent='';
+    return;
+  }
+
+  const mktYears=[...activeYears].sort();
+  const sets=[];
+  let maxRel=0,unit='';
+
+  mktYears.forEach((mktYear,i)=>{
+    const series=validSeries(region,resolvedAttr,mktYear);
+    if(!series.length)return;
+    if(!unit&&series[0].unit)unit=series[0].unit;
+    maxRel=Math.max(maxRel,series.length);
+    sets.push({
+      label:mktYear,
+      data:series.map(p=>({x:p.releaseNum-1,y:p.value})),
+      borderColor:COLORS[i%COLORS.length],
+      backgroundColor:COLORS[i%COLORS.length]+'20',
+      borderWidth:1.5,pointRadius:2,pointHoverRadius:4,tension:0.3,fill:false
+    });
+  });
+
+  // Add prediction point for most recent marketing year
+  const latestY=[...currentData.marketYears].sort().slice(-1)[0];
+  const pred=dualPredict(region,resolvedAttr,latestY);
+  if(pred&&pred.predVal!==null){
+    const predColor='#7c3aed';
+    sets.push({
+      label:'Pred '+latestY,
+      data:[{x:pred.nextR-1,y:pred.predVal}],
+      borderColor:predColor,
+      backgroundColor:predColor,
+      borderWidth:0,
+      pointRadius:6,
+      pointStyle:'star',
+      showLine:false,
+      pointHoverRadius:8
+    });
+    // Dashed line from last actual to prediction
+    const curSeries=validSeries(region,resolvedAttr,latestY);
+    if(curSeries.length){
+      const lastPt=curSeries[curSeries.length-1];
+      sets.push({
+        label:'',
+        data:[{x:lastPt.releaseNum-1,y:lastPt.value},{x:pred.nextR-1,y:pred.predVal}],
+        borderColor:predColor,borderWidth:1.5,borderDash:[4,3],
+        pointRadius:0,fill:false,showLine:true
+      });
+    }
+    if(badge){
+      const pct=pred.lastVal?((pred.predVal-pred.lastVal)/Math.abs(pred.lastVal)*100):0;
+      const sign=pct>=0?'+':'';
+      const col=pct>0?'#166534':pct<0?'#991b1b':'#555';
+      badge.innerHTML='<span style="color:#555">'+latestY+' R'+pred.nextR+' pred:</span> '+
+        '<strong style="color:'+col+'">'+fmtNum(pred.predVal)+' '+unit+
+        ' ('+sign+pct.toFixed(1)+'%)</strong>'+
+        '<span style="font-size:8.5px;color:#aaa;margin-left:4px">'+pred.method+'</span>';
+    }
+  }else if(badge){badge.textContent='';}
+
+  if(sixCharts[idx])sixCharts[idx].destroy();
+  const labels=Array.from({length:maxRel+1},(_,i)=>'R'+(i+1));
+  sixCharts[idx]=new Chart(canvas,{
+    type:'line',data:{labels,datasets:sets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'nearest',intersect:false},
+      plugins:{
+        legend:{
+          display:true,position:'top',
+          labels:{font:{size:8},boxWidth:8,padding:4,
+            filter:item=>item.text!==''} // hide dashed line from legend
+        },
+        tooltip:{callbacks:{
+          label:ctx=>{
+            if(!ctx.raw.y&&ctx.raw.y!==0)return'';
+            return' '+ctx.dataset.label+': '+fmtNum(ctx.raw.y)+' '+unit;
+          }
+        }}
+      },
+      scales:{
+        x:{title:{display:false},ticks:{font:{size:8},maxTicksLimit:10}},
+        y:{ticks:{font:{size:8},callback:v=>v.toLocaleString()},
+           title:{display:false}}
+      }
+    }
+  });
+}
+
+// ── Render all 6 charts ───────────────────────────────────────
+function renderSixCharts(){
+  if(!currentData)return;
+  const usR=findRegionByKws(DEFAULT_REGIONS[1]);
+
+  // USA panels 0,1,2 — fixed region, fixed attributes
+  const usaAttrs=[
+    findAttrMatch([/^area.*(planted|seeded)/i]),
+    findAttrMatch([/^production/i]),
+    findAttrMatch([/^ending.stock/i]),
+  ];
+  usaAttrs.forEach((ra,i)=>{
+    const lbl=document.getElementById('lbl-c'+i);
+    if(lbl)lbl.textContent=ra||'—';
+    renderOneChart(i,usR,ra,ra);
+  });
+
+  // World panels 3,4,5 — dropdown region + attribute
+  for(let i=3;i<=5;i++){
+    const rSel=document.getElementById('csel-r'+i);
+    const aSel=document.getElementById('csel-a'+i);
+    const region=rSel?rSel.value:null;
+    const attr  =aSel?aSel.value:null;
+    const ra    =attr?resolveAttr(attr):null;
+    renderOneChart(i,region,ra,attr);
+  }
+}
+
+// ── Marketing year pills ──────────────────────────────────────
 function buildPills(years){
   document.getElementById('mkt-pills').innerHTML=years.map(y=>
     '<button class="pill '+(activeYears.has(y)?'active':'')+'" onclick="toggleYear(\''+y+'\',this)">'+y+'</button>'
@@ -914,53 +1245,7 @@ function buildPills(years){
 function toggleYear(year,el){
   if(activeYears.has(year)){if(activeYears.size===1)return;activeYears.delete(year);el.classList.remove('active');}
   else{activeYears.add(year);el.classList.add('active');}
-  renderChart();
-}
-
-function renderChart(){
-  if(!currentData)return;
-  const region=document.getElementById('sel-region').value;
-  const attr=document.getElementById('sel-attribute').value;
-  const ra=resolveAttr(attr);
-  const can=getCanonUnit(region,ra);
-  const sets=[];let maxRel=0,unit=can||'';
-
-  [...activeYears].sort().forEach((mktYear,i)=>{
-    const series=validSeries(region,ra,mktYear);
-    if(!series.length)return;
-    if(!unit&&series[0].unit)unit=series[0].unit;
-    maxRel=Math.max(maxRel,series.length);
-    sets.push({
-      label:mktYear,
-      data:series.map(p=>({x:p.releaseNum,y:p.value,reportDate:p.reportDate,wasdeNum:p.wasdeNum})),
-      borderColor:COLORS[i%COLORS.length],
-      backgroundColor:COLORS[i%COLORS.length]+'18',
-      borderWidth:2,pointRadius:3,pointHoverRadius:5,tension:0.3,fill:false
-    });
-  });
-
-  if(chart)chart.destroy();
-  if(!sets.length)return;
-  const labels=Array.from({length:maxRel},(_,i)=>'Release '+(i+1));
-  chart=new Chart(document.getElementById('myChart'),{
-    type:'line',data:{labels,datasets:sets},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{position:'top',labels:{font:{size:10},boxWidth:10}},
-        tooltip:{callbacks:{
-          title:ctx=>'Release '+(ctx[0].parsed.x+1),
-          afterBody:ctx=>'WASDE #'+ctx[0].raw.wasdeNum+'  —  '+ctx[0].raw.reportDate,
-          label:ctx=>' '+ctx.dataset.label+': '+ctx.parsed.y.toLocaleString()+' '+unit
-        }}
-      },
-      scales:{
-        x:{title:{display:true,text:'Release number',font:{size:10}}},
-        y:{title:{display:true,text:unit,font:{size:10}},ticks:{callback:v=>v.toLocaleString()}}
-      }
-    }
-  });
+  renderSixCharts();
 }
 
 boot();
