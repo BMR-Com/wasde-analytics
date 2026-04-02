@@ -160,28 +160,44 @@ table.bs tr:last-child td{border-bottom:none}
   .model-note{font-size:6px}
   .tag-up,.tag-dn{font-size:6px;padding:0 2px}
 
-  /* ── Pages 5-8: 2 charts per page, 1 chart-row per page ── */
+  /* ── Charts: each card full-width, one per page ── */
   .chart-row{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:5px!important;
+    display:block!important;
     margin:0!important;
-    page-break-after:always;
     page-break-inside:avoid;
   }
-  .chart-card{border:0.5px solid #999;border-radius:0;break-inside:avoid}
-  .chart-card-head{padding:2px 4px;min-height:auto}
-  .chart-region-lbl,.chart-attr-lbl{font-size:6.5px}
+  .chart-card{
+    display:block!important;width:100%!important;
+    border:0.5px solid #999;border-radius:0;
+    break-inside:avoid;
+    page-break-after:always;
+    margin-bottom:0!important;
+  }
+  .chart-card-head{padding:2px 5px;min-height:auto;display:flex!important;align-items:center;gap:4px}
+  .chart-region-lbl,.chart-attr-lbl{font-size:7px}
   .chart-sel-region,.chart-sel-attr{display:none!important}
-  .pred-badge{font-size:6px;padding:1px 4px;min-height:12px}
-  /* Height = A4 landscape ~170mm usable - head - badge ≈ 155px at 96dpi */
-  .chart-box{height:158px!important;padding:1px}
+  .chart-card-head .prt-lbl{display:inline!important;color:#9fe1cb;font-size:7px}
+  .pred-badge{font-size:7px;padding:2px 5px;min-height:14px}
+  .chart-box{height:175px!important;padding:2px}
+
+  /* rolling+summary on same page */
+  .rolling-row{page-break-after:auto!important}
+  .summary-card{
+    display:block!important;border:0.5px solid #999;border-radius:0;
+    padding:5px;margin-top:4px;margin-bottom:0;break-inside:avoid;
+    page-break-after:always;
+  }
+
+  /* show table dropdown print labels */
+  .tc-head select{display:none!important}
+  .tc-head .prt-lbl{display:inline!important;color:#fff;font-size:7px;font-weight:500}
 
   .print-title{display:block!important;font-size:10px;font-weight:700;text-align:center;margin-bottom:2px;color:#000}
   .print-meta{display:block!important;font-size:7px;text-align:center;color:#444;margin-bottom:4px}
 }
 @media screen{
   .print-title,.print-meta{display:none}
+  .prt-lbl{display:none}
 }
 </style>
 </head>
@@ -261,12 +277,14 @@ table.bs tr:last-child td{border-bottom:none}
     <div class="table-card">
       <div class="tc-head">
         <select id="sel-t6" onchange="renderTable(6)"></select>
+        <span class="prt-lbl" id="prt-lbl-t6"></span>
       </div>
       <div id="tbl-6"><div class="spinner">Loading...</div></div>
     </div>
     <div class="table-card">
       <div class="tc-head">
         <select id="sel-t7" onchange="renderTable(7)"></select>
+        <span class="prt-lbl" id="prt-lbl-t7"></span>
       </div>
       <div id="tbl-7"><div class="spinner">Loading...</div></div>
     </div>
@@ -338,6 +356,7 @@ table.bs tr:last-child td{border-bottom:none}
       <div class="chart-card-head">
         <select id="csel-r4" class="chart-sel-region" onchange="renderCharts()"></select>
         <select id="csel-a4" class="chart-sel-attr" onchange="renderCharts()"></select>
+        <span class="prt-lbl" id="prt-lbl-c4"></span>
       </div>
       <div class="pred-badge" id="pred-c4"></div>
       <div class="chart-box"><canvas id="c4"></canvas></div>
@@ -346,6 +365,7 @@ table.bs tr:last-child td{border-bottom:none}
       <div class="chart-card-head">
         <select id="csel-r5" class="chart-sel-region" onchange="renderCharts()"></select>
         <select id="csel-a5" class="chart-sel-attr" onchange="renderCharts()"></select>
+        <span class="prt-lbl" id="prt-lbl-c5"></span>
       </div>
       <div class="pred-badge" id="pred-c5"></div>
       <div class="chart-box"><canvas id="c5"></canvas></div>
@@ -356,6 +376,7 @@ table.bs tr:last-child td{border-bottom:none}
       <div class="chart-card-head">
         <select id="csel-r6" class="chart-sel-region" onchange="renderCharts()"></select>
         <select id="csel-a6" class="chart-sel-attr" onchange="renderCharts()"></select>
+        <span class="prt-lbl" id="prt-lbl-c6"></span>
       </div>
       <div class="pred-badge" id="pred-c6"></div>
       <div class="chart-box"><canvas id="c6"></canvas></div>
@@ -364,6 +385,7 @@ table.bs tr:last-child td{border-bottom:none}
       <div class="chart-card-head">
         <select id="csel-r7" class="chart-sel-region" onchange="renderCharts()"></select>
         <select id="csel-a7" class="chart-sel-attr" onchange="renderCharts()"></select>
+        <span class="prt-lbl" id="prt-lbl-c7"></span>
       </div>
       <div class="pred-badge" id="pred-c7"></div>
       <div class="chart-box"><canvas id="c7"></canvas></div>
@@ -549,6 +571,8 @@ async function onCommodityChange(){
         sel.innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
         if(def) sel.value=def;
         tableRegions[i]=sel.value;
+        const prt=document.getElementById('prt-lbl-t'+i);
+        if(prt) prt.textContent=sel.value;
       }
     }
   }
@@ -910,15 +934,15 @@ function renderTable(i){
   if(!currentData)return;
   if(i>=6){
     const sel=document.getElementById('sel-t'+i);
-    if(sel) tableRegions[i]=sel.value;
+    if(sel){
+      tableRegions[i]=sel.value;
+      const prt=document.getElementById('prt-lbl-t'+i);
+      if(prt) prt.textContent=sel.value;
+    }
   }
   const region=tableRegions[i];
   const tblEl=document.getElementById('tbl-'+i);
-  if(!region){
-    tblEl.innerHTML='';
-    hideEmptyRows();
-    return;
-  }
+  if(!region){tblEl.innerHTML='';hideEmptyRows();return;}
   const tt=tableTypeForIndex(i);
   tblEl.innerHTML=buildTable(region,tt);
   hideEmptyRows();
@@ -1459,7 +1483,10 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
         }}
       },
       scales:{
-        x:{ticks:{font:{size:8},maxTicksLimit:15}},
+        x:{
+          ticks:{font:{size:8},maxRotation:0,autoSkip:true,maxTicksLimit:30},
+          title:{display:true,text:'Release Number',font:{size:8},color:'#888'}
+        },
         y:{ticks:{font:{size:8},callback:v=>v.toLocaleString()}}
       }
     }
@@ -1485,13 +1512,16 @@ function renderCharts(){
     renderOneChart(i, usR, ra, ra);
   });
 
-  // World dropdown panels 4-7
+  // World dropdown panels 4-7 — sync print labels
   for(let i=4;i<=7;i++){
     const rSel=document.getElementById('csel-r'+i);
     const aSel=document.getElementById('csel-a'+i);
     const region=rSel?rSel.value:null;
     const attr  =aSel?aSel.value:null;
     const ra    =attr?resolveAttr(attr):null;
+    // Update print label
+    const prt=document.getElementById('prt-lbl-c'+i);
+    if(prt) prt.textContent=(region||'')+(attr?' — '+attr:'');
     renderOneChart(i, region, ra, attr);
   }
 }
