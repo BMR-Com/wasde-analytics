@@ -287,19 +287,46 @@ def generate_jsons():
         for (region, attribute, mkt_year), grp in cdf.groupby(
                 ["Region","Attribute","MarketYear"]):
 
-            # ── KEY FIX: filter out early long-range projections ──
-            # USDA sometimes includes next-year estimates in WASDEs 1-2 years
-            # before the marketing year starts, inflating release counts.
-            # Only keep rows where ForecastYear >= start year of mkt_year.
+            # ── Filter out early long-range projections ───────────
             try:
                 mkt_start_year = int(str(mkt_year).split("/")[0])
                 fy = pd.to_numeric(grp["ForecastYear"], errors="coerce")
                 grp = grp[fy.fillna(mkt_start_year) >= mkt_start_year]
             except Exception:
-                pass  # keep all rows if parsing fails
+                pass
 
             if grp.empty:
                 continue
+
+            # ── Deduplicate by WasdeNumber ────────────────────────
+            # The same (region, attribute, mktYear, wasdeNum) can appear
+            # under multiple ReportTitles. Keep only one row per WasdeNumber,
+            # preferring the row whose ReportTitle best matches the region.
+            if "ReportTitle" in grp.columns:
+                r_lower = region.lower()
+                if "united states" in r_lower or "u.s." in r_lower:
+                    pref_kw = "u.s."
+                elif "world" in r_lower:
+                    pref_kw = "world"
+                else:
+                    # For other countries use first word of region name
+                    pref_kw = r_lower.split(",")[0].split("(")[0].strip()
+
+                grp = grp.copy()
+                grp["_pref"] = (
+                    grp["ReportTitle"]
+                    .fillna("")
+                    .str.lower()
+                    .str.contains(pref_kw, na=False)
+                    .astype(int)
+                )
+                # Sort: by WasdeNumber asc, then preferred title first
+                grp = grp.sort_values(
+                    ["WasdeNumber", "_pref"], ascending=[True, False]
+                )
+                # Keep only ONE row per WasdeNumber (highest preference wins)
+                grp = grp.drop_duplicates(subset=["WasdeNumber"], keep="first")
+                grp = grp.drop(columns=["_pref"])
 
             grp = grp.sort_values("WasdeNumber").reset_index(drop=True)
 
