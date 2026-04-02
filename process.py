@@ -1,5 +1,6 @@
 import os, json, io, sys
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -37,48 +38,131 @@ def get_mt_to_bu(commodity):
     return 36.7437
 
 def unit_family(u):
+    """Detect the measurement family from unit string."""
     u = u.strip().lower()
-    if "bushel" in u:     return "bushel"
-    if "metric ton" in u: return "mt"
-    if "bale" in u:       return "bale"
-    if "short ton" in u:  return "ton"
-    if "cwt" in u:        return "cwt"
-    if "hectare" in u:    return "hectare"
-    if "acre" in u:       return "acre"
-    if "pound" in u:      return "pound"
-    if "head" in u:       return "head"
+    if any(k in u for k in ["bushel"]): return "bushel"
+    if any(k in u for k in ["metric ton", " mt", "mt "]): return "mt"
+    if "bale" in u: return "bale"
+    if "short ton" in u: return "ton"
+    if "cwt" in u: return "cwt"
+    if "hectare" in u: return "hectare"
+    if "acre" in u: return "acre"
     return "other"
 
 def unit_scale(u):
+    """Detect numeric scale from unit string."""
     u = u.strip().lower()
-    if "million" in u:                return 1e6
-    if "thousand" in u or "1,000" in u: return 1e3
+    if "million" in u: return 1e6
+    if "thousand" in u or "1,000" in u or "1000" in u: return 1e3
     return 1.0
 
-def convert_to_canonical(val, from_unit, canonical_unit, commodity):
-    fu = from_unit.strip().lower()
-    cu = canonical_unit.strip().lower()
-    if fu == cu or fu == "" or cu == "":
-        return val, True
-    ff = unit_family(fu)
-    cf = unit_family(cu)
-    if ff == cf:
-        fs = unit_scale(fu)
-        ts = unit_scale(cu)
-        if ts == 0: return val, False
-        return val * (fs / ts), True
-    if ff in ("mt","bushel") and cf in ("mt","bushel") and is_grain(commodity):
-        mt_bu = get_mt_to_bu(commodity)
-        fs = unit_scale(fu)
-        ts = unit_scale(cu)
-        if ts == 0: return val, False
-        val_base = val * fs
-        if ff == "mt":
-            val_conv = val_base * mt_bu
+def normalize_series_values(vals, units, commodity):
+    """
+    Given parallel lists of (value, unit_string) for a single
+    (region, attribute, market_year) series sorted by WasdeNumber,
+    return a list of (normalized_value, canonical_unit, ok) where
+    all values are in the same unit.
+
+    Strategy:
+    1. Use unit strings to group by family and scale.
+    2. Pick the most-recent unit as canonical.
+    3. Convert all others to it.
+    4. Run outlier detection: if any value is >50x or <0.02x the
+       rolling median, try rescaling by known factors (1000, 0.001,
+       MT_TO_BU, 1/MT_TO_BU) and pick the factor that minimizes
+       variance in log-space.
+    """
+    if not vals:
+        return []
+
+    n = len(vals)
+    # Step 1: determine canonical from most-recent 5 entries
+    recent_units = units[max(0,n-5):]
+    unit_counts  = {}
+    for u in recent_units:
+        u = u.strip()
+        unit_counts[u] = unit_counts.get(u, 0) + 1
+    canonical    = max(unit_counts, key=unit_counts.get) if unit_counts else ""
+    canon_family = unit_family(canonical)
+    canon_scale  = unit_scale(canonical)
+
+    # Step 2: convert each value to canonical using unit strings
+    result = []
+    for v, u in zip(vals, units):
+        u        = u.strip()
+        uf       = unit_family(u)
+        us       = unit_scale(u)
+
+        if u.lower() == canonical.lower() or u == "":
+            result.append((v, canonical, True))
+            continue
+
+        if uf == canon_family:
+            # Same family, different scale
+            if canon_scale > 0:
+                result.append((round(v * us / canon_scale, 4), canonical, True))
+            else:
+                result.append((v, u, False))
+        elif is_grain(commodity) and uf in ("mt","bushel") and canon_family in ("mt","bushel"):
+            # Cross-family grain conversion
+            mt_bu  = get_mt_to_bu(commodity)
+            v_base = v * us   # raw units
+            if uf == "mt":
+                v_conv = v_base * mt_bu
+            else:
+                v_conv = v_base / mt_bu
+            if canon_scale > 0:
+                result.append((round(v_conv / canon_scale, 4), canonical, True))
+            else:
+                result.append((v, u, False))
         else:
-            val_conv = val_base / mt_bu
-        return val_conv / ts, True
-    return val, False
+            # Unknown conversion — keep raw, mark as potentially bad
+            result.append((v, u, False))
+
+    # Step 3: outlier detection on the normalized values
+    # Check for suspicious >20x jumps between consecutive entries
+    converted_vals = [r[0] for r in result]
+    ok_flags       = [r[2] for r in result]
+
+    # Compute median of all ok values for reference
+    ok_vals = [v for v, ok in zip(converted_vals, ok_flags) if ok and v is not None]
+    if len(ok_vals) < 2:
+        return [(v, u, ok) for (v, u, ok) in result]
+
+    median_val = float(np.median(ok_vals))
+    if median_val == 0:
+        return result
+
+    # Candidate rescale factors to try for outliers
+    mt_bu = get_mt_to_bu(commodity)
+    rescale_candidates = [1000.0, 0.001, mt_bu, 1.0/mt_bu,
+                          mt_bu/1000.0, 1000.0/mt_bu]
+
+    fixed_result = []
+    for i, (v, u, ok) in enumerate(result):
+        if v is None or not ok:
+            fixed_result.append((v, u, ok))
+            continue
+        ratio = v / median_val if median_val != 0 else 1.0
+        if ratio > 50 or ratio < 0.02:
+            # This value is an outlier — try rescaling
+            best_factor = 1.0
+            best_dist   = abs(np.log(max(ratio, 1e-9)))
+            for factor in rescale_candidates:
+                new_v   = v * factor
+                new_rat = new_v / median_val if median_val != 0 else 1.0
+                dist    = abs(np.log(max(new_rat, 1e-9)))
+                if dist < best_dist:
+                    best_dist   = dist
+                    best_factor = factor
+            if best_factor != 1.0:
+                fixed_result.append((round(v * best_factor, 4), canonical, True))
+            else:
+                fixed_result.append((v, u, ok))
+        else:
+            fixed_result.append((v, u, ok))
+
+    return fixed_result
 
 def download_from_release():
     import urllib.request
@@ -145,11 +229,9 @@ def upload_to_release():
     token = os.environ["GITHUB_TOKEN"]
     tag   = "data-store"
     fname = "master_wasde.csv"
-    headers_json = {
-        "Authorization": "Bearer " + token,
-        "Accept": "application/vnd.github+json",
-        "Content-Type": "application/json"
-    }
+    headers_json = {"Authorization":"Bearer "+token,
+                    "Accept":"application/vnd.github+json",
+                    "Content-Type":"application/json"}
     api_url = "https://api.github.com/repos/" + repo + "/releases/tags/" + tag
     req = urllib.request.Request(api_url, headers=headers_json)
     with urllib.request.urlopen(req) as r:
@@ -158,22 +240,19 @@ def upload_to_release():
     for asset in release.get("assets", []):
         if asset["name"] == fname:
             del_req = urllib.request.Request(
-                "https://api.github.com/repos/" + repo + "/releases/assets/" + str(asset["id"]),
+                "https://api.github.com/repos/"+repo+"/releases/assets/"+str(asset["id"]),
                 method="DELETE", headers=headers_json)
             urllib.request.urlopen(del_req)
             print("Deleted old " + fname)
             break
     size = Path(MASTER_PATH).stat().st_size
-    upload_url = ("https://uploads.github.com/repos/" + repo +
-                  "/releases/" + str(release_id) + "/assets?name=" + fname)
+    upload_url = ("https://uploads.github.com/repos/"+repo+
+                  "/releases/"+str(release_id)+"/assets?name="+fname)
     print("Uploading updated CSV (" + str(size//1024//1024) + " MB)...")
     with open(MASTER_PATH, "rb") as f:
         data = f.read()
     up_req = urllib.request.Request(upload_url, data=data, headers={
-        "Authorization": "Bearer " + token,
-        "Content-Type": "text/csv",
-        "Content-Length": str(size)
-    })
+        "Authorization":"Bearer "+token,"Content-Type":"text/csv","Content-Length":str(size)})
     urllib.request.urlopen(up_req)
     print("Uploaded " + fname + " to release")
 
@@ -185,6 +264,10 @@ def generate_jsons():
     df["Value"]       = pd.to_numeric(df["Value"],       errors="coerce")
     df["Unit"]        = df["Unit"].fillna("").astype(str).str.strip()
     df = df.dropna(subset=["WasdeNumber","Value"])
+
+    print("Unique units in data:")
+    print(df["Unit"].value_counts().head(30).to_string())
+    print()
 
     manifest = []
 
@@ -198,66 +281,61 @@ def generate_jsons():
             print("  SKIP " + commodity + " — insufficient recent data")
             continue
 
-        top5_w  = sorted(cdf["WasdeNumber"].unique())[-5:]
-        unit_map = {}
-
-        for (region, attribute), grp in cdf.groupby(["Region","Attribute"]):
-            key_norm   = (region, attribute.strip().lower())
-            recent_grp = grp[grp["WasdeNumber"].isin(top5_w)]
-            if len(recent_grp) == 0:
-                recent_grp = grp
-            units = recent_grp["Unit"].value_counts()
-            dominant = units.idxmax() if len(units) else ""
-            if grain and unit_family(dominant) in ("mt","bushel"):
-                canonical = "Million Bushels"
-            else:
-                canonical = dominant
-            unit_map[key_norm] = canonical
-
-        data = {}
-        fail_keys = set()
+        data       = {}
+        unit_display = {}
 
         for (region, attribute, mkt_year), grp in cdf.groupby(
                 ["Region","Attribute","MarketYear"]):
-            key_norm  = (region, attribute.strip().lower())
-            canonical = unit_map.get(key_norm, "")
+
+            # ── KEY FIX: filter out early long-range projections ──
+            # USDA sometimes includes next-year estimates in WASDEs 1-2 years
+            # before the marketing year starts, inflating release counts.
+            # Only keep rows where ForecastYear >= start year of mkt_year.
+            try:
+                mkt_start_year = int(str(mkt_year).split("/")[0])
+                fy = pd.to_numeric(grp["ForecastYear"], errors="coerce")
+                grp = grp[fy.fillna(mkt_start_year) >= mkt_start_year]
+            except Exception:
+                pass  # keep all rows if parsing fails
+
+            if grp.empty:
+                continue
+
             grp = grp.sort_values("WasdeNumber").reset_index(drop=True)
-            grp["releaseNum"] = range(1, len(grp)+1)
+
+            vals  = grp["Value"].tolist()
+            units = grp["Unit"].tolist()
+
+            # Normalize all values in this series to same unit
+            normed = normalize_series_values(vals, units, commodity)
 
             rows = []
-            for _, row in grp.iterrows():
-                raw_val  = float(row["Value"])
-                row_unit = str(row["Unit"]).strip()
-                conv_val, ok = convert_to_canonical(raw_val, row_unit, canonical, commodity)
-                if not ok:
-                    conv_val  = raw_val
-                    used_unit = row_unit
-                    fk = commodity+"/"+region+"/"+attribute+": ["+row_unit+"]→["+canonical+"]"
-                    if fk not in fail_keys:
-                        fail_keys.add(fk)
-                        print("  WARN "+fk)
+            for idx2, (row_idx, row) in enumerate(grp.iterrows()):
+                if idx2 < len(normed):
+                    norm_val, norm_unit, ok = normed[idx2]
                 else:
-                    used_unit = canonical
+                    norm_val, norm_unit, ok = float(row["Value"]), str(row["Unit"]), False
+
                 rows.append({
-                    "releaseNum":    int(row["releaseNum"]),
+                    "releaseNum":    idx2 + 1,
                     "wasdeNum":      int(row["WasdeNumber"]),
-                    "reportDate":    str(row.get("ReportDate","")),
-                    "value":         round(conv_val, 4),
+                    "reportDate":    str(row.get("ReportDate", "")),
+                    "value":         round(norm_val, 4) if norm_val is not None else None,
                     "forecastYear":  int(row["ForecastYear"]) if pd.notna(row.get("ForecastYear")) else None,
                     "forecastMonth": int(row["ForecastMonth"]) if pd.notna(row.get("ForecastMonth")) else None,
-                    "unit":          used_unit,
+                    "unit":          norm_unit,
                     "unitOk":        ok
                 })
-            key = region+"||"+attribute+"||"+mkt_year
+
+                # Track canonical unit for display
+                disp_key = region + "||" + attribute
+                if disp_key not in unit_display:
+                    unit_display[disp_key] = norm_unit
+
+            key = region + "||" + attribute + "||" + mkt_year
             data[key] = rows
 
-        unit_display = {}
-        for (region, attr_norm), unit in unit_map.items():
-            orig = cdf[cdf["Attribute"].str.strip().str.lower()==attr_norm]["Attribute"]
-            orig_attr = orig.iloc[0] if len(orig) else attr_norm
-            unit_display[region+"||"+orig_attr] = unit
-
-        fname = commodity.replace("/","-").replace(" ","_")+".json"
+        fname = commodity.replace("/","-").replace(" ","_") + ".json"
         out = {
             "commodity":   commodity,
             "isGrain":     grain,
@@ -268,21 +346,23 @@ def generate_jsons():
             "data":        data,
             "lastUpdated": datetime.utcnow().strftime("%Y-%m-%d")
         }
-        with open(DATA_DIR/fname,"w") as f:
+        with open(DATA_DIR / fname, "w") as f:
             json.dump(out, f, separators=(",",":"))
-        kb = (DATA_DIR/fname).stat().st_size//1024
-        print("  "+fname+" ("+str(kb)+" KB)"+(" [GRAIN→Bu]" if grain else ""))
-        manifest.append({"commodity":commodity,"file":fname,"regions":out["regions"]})
+        kb = (DATA_DIR / fname).stat().st_size // 1024
+        print("  " + fname + " (" + str(kb) + " KB)")
+        manifest.append({"commodity": commodity, "file": fname,
+                         "regions": out["regions"]})
 
-    with open(DATA_DIR/"manifest.json","w") as f:
-        json.dump({"commodities":manifest,"lastUpdated":datetime.utcnow().strftime("%Y-%m-%d")},f)
-    print(str(len(manifest))+" JSONs written to /data/")
+    with open(DATA_DIR / "manifest.json", "w") as f:
+        json.dump({"commodities": manifest,
+                   "lastUpdated": datetime.utcnow().strftime("%Y-%m-%d")}, f)
+    print(str(len(manifest)) + " JSONs written to /data/")
 
-mode = sys.argv[1] if len(sys.argv)>1 else "full"
-if mode=="json-from-release":
+mode = sys.argv[1] if len(sys.argv) > 1 else "full"
+if mode == "json-from-release":
     download_from_release()
     generate_jsons()
-elif mode=="full":
+elif mode == "full":
     download_from_release()
     fetch_and_append()
     upload_to_release()
