@@ -482,26 +482,20 @@ async function onCommodityChange(){
   all_attrs_sorted=sortDedupeAttrs(currentData.attributes,'us');
 
   const regions=currentData.regions;
-  document.getElementById('sel-region').innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
 
   // Set each table's region — null means no data for that slot
   for(let i=0;i<8;i++){
     const def=findRegionByKws(DEFAULT_REGIONS[i]);
-    tableRegions[i]=def||null;   // null = not available, do NOT fall back to regions[0]
+    tableRegions[i]=def||null;
     if(i>=6){
       const sel=document.getElementById('sel-t'+i);
       if(sel){
         sel.innerHTML=regions.map(r=>'<option>'+r+'</option>').join('');
         if(def) sel.value=def;
-        tableRegions[i]=sel.value; // always has a value since we populate all regions
+        tableRegions[i]=sel.value;
       }
     }
   }
-
-  const aSel=document.getElementById('sel-attribute');
-  aSel.innerHTML=all_attrs_sorted.map(a=>'<option>'+a+'</option>').join('');
-  const esIdx=all_attrs_sorted.findIndex(a=>/^ending.stock/i.test(a));
-  if(esIdx>=0) aSel.selectedIndex=esIdx;
 
   activeYears=new Set(currentData.marketYears.slice(-5));
   buildPills(currentData.marketYears);
@@ -511,9 +505,7 @@ async function onCommodityChange(){
   renderSummaryAndPrediction();
   initChartSelects();
   renderSixCharts();
-  renderChart();
 
-  // Update print metadata
   document.getElementById('print-title').textContent=
     'WASDE Balance Sheet — '+(currentData.commodity||'');
   document.getElementById('print-meta').textContent=
