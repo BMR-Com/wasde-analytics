@@ -940,10 +940,9 @@ function renderSummaryAndPrediction(){
       const tag=m.pct>0?'<span class="tag-up">'+sign+m.pct.toFixed(1)+'%</span>':'<span class="tag-dn">'+m.pct.toFixed(1)+'%</span>';
       const dlab=m.isDerived?' <span style="font-size:9px;color:#1e40af">[ES formula]</span>':'';
       predH+='<li>'+tag+' <strong>'+m.attr+'</strong>'+dlab+' ('+m.region+'): '+
-             fmtNum(m.lastVal)+' → '+fmtNum(m.nextVal)+' '+m.unit+
-             ' <span style="font-size:9px;color:#aaa">('+m.method+')</span></li>';
+             fmtNum(m.lastVal)+' → '+fmtNum(m.nextVal)+' '+m.unit+'</li>';
     });
-    predH+='</ul><p class="model-note">Only Ending Stocks uses empirical formula. All other attributes use blended regression. '+NR_MONTH+'.</p>';
+    predH+='</ul><p class="model-note">★ Prediction model: best of (1) average month-on-month change at current release position, trained on earlier years, vs (2) ratio evolution — value[next] / value[best prior release], selected by lowest out-of-sample RMSE on 4 holdout years. Only Ending Stocks uses the empirical balance-sheet formula. '+NR_MONTH+'.</p>';
   }
   document.getElementById('prediction-text').innerHTML=predH;
 }
@@ -1102,99 +1101,128 @@ function dualPredict(region, resolvedAttr, mktYear){
     nextR,
     method,
     m1:{pred:m1Pred,rmse:m1RMSE},
-    m2:{pred:m2Pred,rmse:m2RMSE,bestP,corr:bestCorr}
+    m2:{pred:m2Pred,rmse:m2RMSE,bestP:bestP2,ratio:bestRatio}
   };
 }
 
 // ── Render one of the 6 chart panels ──────────────────────────
 function renderOneChart(idx, region, resolvedAttr, attrLabel){
   const canvas=document.getElementById('c'+idx);
-  const badge=document.getElementById('pred-c'+idx);
-  if(!canvas||!region||!resolvedAttr){
-    if(badge)badge.textContent='';
+  const badge =document.getElementById('pred-c'+idx);
+  if(!canvas){return;}
+  if(!region||!resolvedAttr){
+    if(sixCharts[idx]){sixCharts[idx].destroy();sixCharts[idx]=null;}
+    if(badge)badge.innerHTML='No data';
     return;
   }
 
   const mktYears=[...activeYears].sort();
-  const sets=[];
-  let maxRel=0,unit='';
+  const datasets=[];
+  let maxRel=0, unit='';
 
   mktYears.forEach((mktYear,i)=>{
     const series=validSeries(region,resolvedAttr,mktYear);
     if(!series.length)return;
     if(!unit&&series[0].unit)unit=series[0].unit;
     maxRel=Math.max(maxRel,series.length);
-    sets.push({
+    datasets.push({
       label:mktYear,
-      data:series.map(p=>({x:p.releaseNum-1,y:p.value})),
+      data:series.map(p=>p.value),          // plain array — index = releaseNum-1
       borderColor:COLORS[i%COLORS.length],
       backgroundColor:COLORS[i%COLORS.length]+'20',
-      borderWidth:1.5,pointRadius:2,pointHoverRadius:4,tension:0.3,fill:false
+      borderWidth:1.5,pointRadius:2,pointHoverRadius:4,
+      tension:0.3,fill:false
     });
   });
 
-  // Add prediction point for most recent marketing year
+  if(!datasets.length){
+    if(sixCharts[idx]){sixCharts[idx].destroy();sixCharts[idx]=null;}
+    if(badge)badge.innerHTML='No data';
+    return;
+  }
+
+  // Prediction for the most recent marketing year
   const latestY=[...currentData.marketYears].sort().slice(-1)[0];
   const pred=dualPredict(region,resolvedAttr,latestY);
+  const predColor='#7c3aed';
+
   if(pred&&pred.predVal!==null){
-    const predColor='#7c3aed';
-    sets.push({
-      label:'Pred '+latestY,
-      data:[{x:pred.nextR-1,y:pred.predVal}],
-      borderColor:predColor,
-      backgroundColor:predColor,
-      borderWidth:0,
-      pointRadius:6,
-      pointStyle:'star',
-      showLine:false,
-      pointHoverRadius:8
-    });
-    // Dashed line from last actual to prediction
+    // Extend the latest-year line with a dashed segment to prediction
     const curSeries=validSeries(region,resolvedAttr,latestY);
     if(curSeries.length){
-      const lastPt=curSeries[curSeries.length-1];
-      sets.push({
+      const lastVal=curSeries[curSeries.length-1].value;
+      const lastIdx=curSeries[curSeries.length-1].releaseNum-1;
+      const predIdx=pred.nextR-1;
+      maxRel=Math.max(maxRel,pred.nextR);
+
+      // Dashed connector line
+      const connector=new Array(predIdx+1).fill(null);
+      connector[lastIdx]=lastVal;
+      connector[predIdx]=pred.predVal;
+      datasets.push({
         label:'',
-        data:[{x:lastPt.releaseNum-1,y:lastPt.value},{x:pred.nextR-1,y:pred.predVal}],
-        borderColor:predColor,borderWidth:1.5,borderDash:[4,3],
-        pointRadius:0,fill:false,showLine:true
+        data:connector,
+        borderColor:predColor,
+        borderWidth:1.5,
+        borderDash:[5,4],
+        pointRadius:0,
+        fill:false,
+        tension:0
+      });
+
+      // Prediction star point
+      const starData=new Array(predIdx+1).fill(null);
+      starData[predIdx]=pred.predVal;
+      datasets.push({
+        label:'Pred '+latestY,
+        data:starData,
+        borderColor:predColor,
+        backgroundColor:predColor,
+        borderWidth:0,
+        pointRadius:6,
+        pointStyle:'star',
+        fill:false,
+        tension:0
       });
     }
+
     if(badge){
       const pct=pred.lastVal?((pred.predVal-pred.lastVal)/Math.abs(pred.lastVal)*100):0;
       const sign=pct>=0?'+':'';
       const col=pct>0?'#166534':pct<0?'#991b1b':'#555';
-      badge.innerHTML='<span style="color:#555">'+latestY+' R'+pred.nextR+' pred:</span> '+
+      badge.innerHTML=
+        '<span style="color:#555">'+latestY+' R'+pred.nextR+':</span> '+
         '<strong style="color:'+col+'">'+fmtNum(pred.predVal)+' '+unit+
-        ' ('+sign+pct.toFixed(1)+'%)</strong>'+
-        '<span style="font-size:8.5px;color:#aaa;margin-left:4px">'+pred.method+'</span>';
+        ' ('+sign+pct.toFixed(1)+'%)</strong>';
     }
-  }else if(badge){badge.textContent='';}
+  }else if(badge){badge.innerHTML='';}
+
+  const labels=Array.from({length:maxRel},(_,i)=>'R'+(i+1));
 
   if(sixCharts[idx])sixCharts[idx].destroy();
-  const labels=Array.from({length:maxRel+1},(_,i)=>'R'+(i+1));
   sixCharts[idx]=new Chart(canvas,{
-    type:'line',data:{labels,datasets:sets},
+    type:'line',
+    data:{labels,datasets},
     options:{
       responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'nearest',intersect:false},
+      spanGaps:false,
+      interaction:{mode:'index',intersect:false},
       plugins:{
         legend:{
-          display:true,position:'top',
-          labels:{font:{size:8},boxWidth:8,padding:4,
-            filter:item=>item.text!==''} // hide dashed line from legend
+          position:'top',
+          labels:{font:{size:8},boxWidth:8,padding:3,
+            filter:item=>item.text!==''}
         },
         tooltip:{callbacks:{
           label:ctx=>{
-            if(!ctx.raw.y&&ctx.raw.y!==0)return'';
-            return' '+ctx.dataset.label+': '+fmtNum(ctx.raw.y)+' '+unit;
+            if(ctx.parsed.y===null)return null;
+            return ' '+ctx.dataset.label+': '+fmtNum(ctx.parsed.y)+' '+unit;
           }
         }}
       },
       scales:{
-        x:{title:{display:false},ticks:{font:{size:8},maxTicksLimit:10}},
-        y:{ticks:{font:{size:8},callback:v=>v.toLocaleString()},
-           title:{display:false}}
+        x:{ticks:{font:{size:8},maxTicksLimit:12}},
+        y:{ticks:{font:{size:8},callback:v=>v.toLocaleString()}}
       }
     }
   });
@@ -1203,18 +1231,19 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
 // ── Render all 6 charts ───────────────────────────────────────
 function renderSixCharts(){
   if(!currentData)return;
-  const usR=findRegionByKws(DEFAULT_REGIONS[1]);
+  const usR=findRegionByKws(DEFAULT_REGIONS[1]);  // United States
 
   // USA panels 0,1,2 — fixed region, fixed attributes
-  const usaAttrs=[
-    findAttrMatch([/^area.*(planted|seeded)/i]),
-    findAttrMatch([/^production/i]),
-    findAttrMatch([/^ending.stock/i]),
+  const usaAttrPatterns=[
+    [/^area.*(planted|seeded)/i],
+    [/^production/i],
+    [/^ending.stock/i],
   ];
-  usaAttrs.forEach((ra,i)=>{
+  usaAttrPatterns.forEach((pats,i)=>{
+    const ra=findAttrMatch(pats);
     const lbl=document.getElementById('lbl-c'+i);
     if(lbl)lbl.textContent=ra||'—';
-    renderOneChart(i,usR,ra,ra);
+    renderOneChart(i, usR, ra, ra);
   });
 
   // World panels 3,4,5 — dropdown region + attribute
@@ -1224,7 +1253,7 @@ function renderSixCharts(){
     const region=rSel?rSel.value:null;
     const attr  =aSel?aSel.value:null;
     const ra    =attr?resolveAttr(attr):null;
-    renderOneChart(i,region,ra,attr);
+    renderOneChart(i, region, ra, attr);
   }
 }
 
