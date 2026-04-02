@@ -983,14 +983,29 @@ function buildRollingTable(region, tableType){
   const attrs=sortDedupeAttrs(currentData.attributes, tableType);
   if(!attrs.length) return '<div class="no-avail">No attributes</div>';
 
-  // Mark where the marketing year changes for a separator
-  let h='<div class="tbl-scroll"><table class="bs"><thead><tr>';
-  h+='<th class="ac" style="min-width:120px">Attribute</th>';
+  // Build two-row header: row1 = marketing year spans, row2 = month/year dates
+  let h='<div class="tbl-scroll"><table class="bs"><thead>';
+
+  // Row 1: marketing year group headers (spanning their columns)
+  h+='<tr><th class="ac" style="min-width:120px" rowspan="2">Attribute</th>';
+  let i=0;
+  while(i<slots.length){
+    const my=slots[i].mktYear;
+    let span=1;
+    while(i+span<slots.length&&slots[i+span].mktYear===my) span++;
+    const borderL=i>0?'border-left:2px solid #9fe1cb;':'';
+    h+='<th colspan="'+span+'" class="yg" style="'+borderL+'font-size:9px;text-align:center">'+my+'</th>';
+    i+=span;
+  }
+  h+='</tr>';
+
+  // Row 2: actual release month/year
+  h+='<tr>';
   let prevMktY=null;
   slots.forEach(sl=>{
     const sep=prevMktY&&prevMktY!==sl.mktYear?'border-left:2px solid #9fe1cb;':'';
-    h+='<th style="font-size:8.5px;font-weight:500;color:#555;white-space:nowrap;'+sep+
-       '" title="'+sl.mktYear+'">'+sl.dateLabel+'</th>';
+    h+='<th style="font-size:8.5px;font-weight:400;color:#777;white-space:nowrap;'+sep+
+       '">'+sl.dateLabel+'</th>';
     prevMktY=sl.mktYear;
   });
   h+='</tr></thead><tbody>';
