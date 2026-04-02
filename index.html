@@ -314,6 +314,20 @@ table.bs tr:last-child td{border-bottom:none}
     </div>
   </div>
 
+  <!-- Additional fixed charts: USA Harvested + World Exports -->
+  <div class="chart-row" style="margin-top:.75rem">
+    <div class="chart-card">
+      <div class="chart-card-head"><span class="chart-region-lbl">USA</span><span class="chart-attr-lbl" id="lbl-c6"></span></div>
+      <div class="pred-badge" id="pred-c6"></div>
+      <div class="chart-box"><canvas id="c6"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-head"><span class="chart-region-lbl">World</span><span class="chart-attr-lbl" id="lbl-c7"></span></div>
+      <div class="pred-badge" id="pred-c7"></div>
+      <div class="chart-box"><canvas id="c7"></canvas></div>
+    </div>
+  </div>
+
   <!-- Marketing year pills (shared) -->
   <div style="margin-top:.5rem">
     <div class="pills-lbl">Marketing Years (all charts)</div>
@@ -948,7 +962,7 @@ function renderSummaryAndPrediction(){
 }
 
 // ── 6-panel chart system ──────────────────────────────────────
-const sixCharts = new Array(6).fill(null); // Chart.js instances
+const sixCharts = new Array(8).fill(null); // Chart.js instances (8 panels)
 
 // USA fixed: attributes in priority order
 const USA_ATTRS = [
@@ -1117,15 +1131,39 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
 
   const mktYears=[...activeYears].sort();
   const datasets=[];
-  let maxRel=0, unit='';
+  let unit='';
+
+  // Build a global WasdeNumber → x-index map from ALL mktYears for this region+attr.
+  // This ensures every marketing year uses the same x position for the same WASDE release.
+  const allWasdeNums=new Set();
+  mktYears.forEach(yr=>{
+    validSeries(region,resolvedAttr,yr).forEach(p=>allWasdeNums.add(p.wasdeNum));
+  });
+  // Also include all WasdeNums that appear for ANY attr in the current data so
+  // the current mktYear lines up correctly regardless of when each attr was first published.
+  const sortedWasde=[...allWasdeNums].sort((a,b)=>a-b);
+  // But we want to START x=0 from the first WASDE that reported the current mktYear
+  // for THIS attribute, so the seasons are aligned on release 1 = first appearance.
+  // Strategy: per mktYear, rank by WasdeNumber order within that year's data.
+  const mktYearWasdeRankMap={};
+  mktYears.forEach(yr=>{
+    const s=validSeries(region,resolvedAttr,yr);
+    const sorted=[...s].sort((a,b)=>a.wasdeNum-b.wasdeNum);
+    const map={};
+    sorted.forEach((p,i)=>{ map[p.wasdeNum]=i; }); // 0-indexed within that year
+    mktYearWasdeRankMap[yr]=map;
+  });
 
   mktYears.forEach((mktYear,i)=>{
     const series=validSeries(region,resolvedAttr,mktYear);
     if(!series.length)return;
     if(!unit&&series[0].unit)unit=series[0].unit;
-    // Pad to 30 releases with null
+    const rankMap=mktYearWasdeRankMap[mktYear];
     const arr=new Array(30).fill(null);
-    series.forEach(p=>{ if(p.releaseNum<=30) arr[p.releaseNum-1]=p.value; });
+    series.forEach(p=>{
+      const x=rankMap[p.wasdeNum]; // 0-indexed rank within this mktYear
+      if(x!==undefined&&x<30) arr[x]=p.value;
+    });
     datasets.push({
       label:mktYear,
       data:arr,
@@ -1152,13 +1190,12 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
     const curSeries=validSeries(region,resolvedAttr,latestY);
     if(curSeries.length){
       const lastPt=curSeries[curSeries.length-1];
-      const lastVal=lastPt.value;
-      const lastIdx=Math.min(lastPt.releaseNum-1, 29);
-      const predIdx=Math.min(pred.nextR-1, 29);
+      const rankMap=mktYearWasdeRankMap[latestY]||{};
+      const lastIdx=rankMap[lastPt.wasdeNum]??0;
+      const predIdx=Math.min(lastIdx+1, 29);
 
-      // Dashed connector (30-length array)
       const connector=new Array(30).fill(null);
-      connector[lastIdx]=lastVal;
+      connector[lastIdx]=lastPt.value;
       connector[predIdx]=pred.predVal;
       datasets.push({
         label:'',
@@ -1171,7 +1208,6 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
         tension:0
       });
 
-      // Star prediction point (30-length array)
       const starData=new Array(30).fill(null);
       starData[predIdx]=pred.predVal;
       datasets.push({
@@ -1230,25 +1266,26 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
   });
 }
 
-// ── Render all 6 charts ───────────────────────────────────────
+// ── Render all 8 charts ───────────────────────────────────────
 function renderSixCharts(){
   if(!currentData)return;
-  const usR=findRegionByKws(DEFAULT_REGIONS[1]);  // United States
+  const usR   =findRegionByKws(DEFAULT_REGIONS[1]); // United States
+  const worldR=findRegionByKws(DEFAULT_REGIONS[0]); // World
 
-  // USA panels 0,1,2 — fixed region, fixed attributes
-  const usaAttrPatterns=[
+  // USA fixed panels 0,1,2: Planted, Production, Ending Stocks
+  const usaFixed=[
     [/^area.*(planted|seeded)/i, /^planted/i],
     [/^production/i],
     [/^ending.stock/i],
   ];
-  usaAttrPatterns.forEach((pats,i)=>{
+  usaFixed.forEach((pats,i)=>{
     const ra=findAttrMatch(pats);
     const lbl=document.getElementById('lbl-c'+i);
     if(lbl)lbl.textContent=ra||'—';
     renderOneChart(i, usR, ra, ra);
   });
 
-  // World panels 3,4,5 — dropdown region + attribute
+  // World dropdown panels 3,4,5
   for(let i=3;i<=5;i++){
     const rSel=document.getElementById('csel-r'+i);
     const aSel=document.getElementById('csel-a'+i);
@@ -1257,6 +1294,18 @@ function renderSixCharts(){
     const ra    =attr?resolveAttr(attr):null;
     renderOneChart(i, region, ra, attr);
   }
+
+  // Fixed panel 6: USA Area Harvested
+  const raHarv=findAttrMatch([/^area.*(harv)/i, /^harvested/i]);
+  const lbl6=document.getElementById('lbl-c6');
+  if(lbl6)lbl6.textContent=raHarv||'Area Harvested';
+  renderOneChart(6, usR, raHarv, raHarv);
+
+  // Fixed panel 7: World Exports
+  const raExp=findAttrMatch([/^export(?!s?,\s*total)/i, /^export/i]);
+  const lbl7=document.getElementById('lbl-c7');
+  if(lbl7)lbl7.textContent=raExp||'Exports';
+  renderOneChart(7, worldR, raExp, raExp);
 }
 
 // ── Marketing year pills ──────────────────────────────────────
