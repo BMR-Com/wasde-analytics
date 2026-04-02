@@ -75,7 +75,15 @@ table.bs tr:last-child td{border-bottom:none}
 .print-btn{background:#1a2e1a;color:#fff;border:none;padding:.5rem 1.2rem;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px}
 .print-btn:hover{background:#2a4a2a}
 .no-avail{font-size:10px;color:#bbb;padding:.75rem;text-align:center}
-/* 6-panel chart styles */
+/* ── Rolling history table ─────────────────────────────────── */
+.rolling-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+@media(max-width:700px){.rolling-row{grid-template-columns:1fr}}
+/* Compact cell sizing so 13 cols fit without scrolling */
+.rolling-row table.bs th.ac{min-width:90px;max-width:110px;font-size:9px}
+.rolling-row table.bs th{padding:2px 3px;font-size:8px}
+.rolling-row table.bs td{padding:2px 3px;font-size:9px;white-space:nowrap}
+.rolling-row table.bs td.an{max-width:110px;font-size:9px}
+.rolling-row .tbl-scroll{overflow-x:auto}   /* fallback only */
 .chart-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
 @media(max-width:700px){.chart-row{grid-template-columns:1fr}}
 .chart-card{background:#fff;border:1px solid #e5e5e0;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
@@ -89,72 +97,88 @@ table.bs tr:last-child td{border-bottom:none}
 
 /* ── Print styles ──────────────────────────────────────────── */
 @media print {
-  @page{size:A4 landscape;margin:8mm 8mm 8mm 8mm}
+  @page{size:A4 landscape;margin:7mm 7mm 7mm 7mm}
   body{background:#fff;color:#000;font-size:8px}
 
-  /* Hide screen chrome */
   header,.nrbar,.top-controls,.print-btn,
-  .tc-head select,.pills,.pills-lbl{display:none!important}
+  .tc-head select,.pills,.pills-lbl,
+  div[style*="font-size:11px"]{display:none!important}
 
   .section{padding:0;max-width:100%}
-  .sec-title{font-size:8px;margin-bottom:3px;padding-left:4px;border-left-width:2px}
+  .sec-title{font-size:7.5px;margin-bottom:2px;padding-left:3px;border-left-width:2px}
 
-  /* All table rows: always 2 per row */
+  /* ── Pages 1+2: balance sheet tables ── */
   .tables-row{
     display:grid!important;
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:5px!important;
-    margin-bottom:5px!important;
+    gap:4px!important;margin-bottom:4px!important;
   }
-
-  /* Page 1: rows 1 + 2 (World+USA, Brazil+China) */
-  .row-1{page-break-before:auto}
   .row-2{page-break-after:always}
-
-  /* Page 2: rows 3 + 4 (WlC+India, EU+Russia) */
-  .row-3{page-break-before:auto}
   .row-4{page-break-after:always}
 
-  /* Page 3: Summary + Chart */
-  .summary-card{
-    display:block!important;
-    border:0.5px solid #999;border-radius:0;
-    padding:7px;margin-bottom:6px;
-    break-inside:avoid;
-    page-break-before:auto;
-  }
-  .summary-card .sec-title{font-size:8px;margin-bottom:4px}
-  .summary-grid{display:grid!important;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
-  .sb h4{font-size:7.5px;margin-bottom:3px;padding-bottom:2px}
-  .sb ul{padding-left:12px}
-  .sb li{font-size:7.5px;line-height:1.6}
-  .sb p{font-size:7.5px;line-height:1.5}
-  .model-note{font-size:7px}
-  .tag-up,.tag-dn{font-size:7px;padding:0 3px}
-
-  .chart-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important;margin-bottom:5px!important;page-break-inside:avoid}
-  .chart-card{border:0.5px solid #999;border-radius:0;break-inside:avoid;page-break-inside:avoid}
-  .chart-card-head{padding:2px 5px}
-  .chart-region-lbl,.chart-attr-lbl{font-size:7px}
-  .chart-sel-region,.chart-sel-attr{display:none!important}
-  .pred-badge{font-size:7px;padding:1px 5px;min-height:14px}
-  .chart-box{height:130px!important;padding:2px}
-
-  /* Table element styles */
   .table-card{border:0.5px solid #999;border-radius:0;break-inside:avoid}
-  .tc-head{padding:3px 5px;font-size:8px}
-  table.bs{font-size:7px;table-layout:fixed;width:100%}
-  table.bs th{padding:2px 4px;font-size:6.5px;white-space:nowrap}
-  table.bs th.ac{min-width:110px;max-width:130px}
-  table.bs td{padding:1.5px 4px;font-size:7px;white-space:nowrap}
-  table.bs td.an{max-width:130px;overflow:hidden;text-overflow:ellipsis}
-  .tbl-legend{font-size:7px;padding:2px 5px}
-  .chg{font-size:6.5px}
-  .pv,.pv-es{font-size:7px}
+  .tc-head{padding:2px 4px;font-size:7px}
+  table.bs{font-size:6.5px;table-layout:fixed;width:100%}
+  table.bs th{padding:1.5px 3px;font-size:6px;white-space:nowrap}
+  table.bs th.ac{min-width:100px;max-width:115px}
+  table.bs td{padding:1px 3px;font-size:6.5px;white-space:nowrap}
+  table.bs td.an{max-width:115px;overflow:hidden;text-overflow:ellipsis}
+  .tbl-legend{font-size:6px;padding:1px 4px}
+  .chg{font-size:5.5px}
+  .pv,.pv-es{font-size:6.5px}
 
-  /* Print-only title block */
-  .print-title{display:block!important;font-size:11px;font-weight:700;text-align:center;margin-bottom:2px;color:#000}
-  .print-meta{display:block!important;font-size:7.5px;text-align:center;color:#444;margin-bottom:6px}
+  /* ── Page 3: rolling history (both tables, fits one page) ── */
+  .rolling-sec-title{margin-top:0!important;font-size:7px!important}
+  .rolling-row{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:4px!important;
+    page-break-after:always;
+    page-break-inside:avoid;
+  }
+  .rolling-row .tbl-scroll{overflow:visible!important}
+  .rolling-row table.bs{font-size:5.5px!important;table-layout:fixed;width:100%}
+  .rolling-row table.bs th.ac{min-width:65px!important;max-width:75px!important;font-size:5px!important}
+  .rolling-row table.bs th{padding:1px 2px!important;font-size:5px!important;white-space:nowrap!important}
+  .rolling-row table.bs td{padding:0.5px 2px!important;font-size:5.5px!important;white-space:nowrap!important}
+  .rolling-row table.bs td.an{max-width:75px!important;overflow:hidden;text-overflow:ellipsis}
+  .rolling-row .tbl-legend{display:none!important}
+  .rolling-row .tc-head{padding:2px 4px;font-size:7px}
+
+  /* ── Page 4: summary ── */
+  .summary-card{
+    display:block!important;border:0.5px solid #999;border-radius:0;
+    padding:5px;margin-bottom:4px;break-inside:avoid;
+    page-break-after:always;
+  }
+  .summary-card .sec-title{font-size:7px;margin-bottom:3px}
+  .summary-grid{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;margin-top:3px}
+  .sb h4{font-size:6.5px;margin-bottom:2px;padding-bottom:2px}
+  .sb ul{padding-left:10px}
+  .sb li{font-size:6.5px;line-height:1.5}
+  .sb p{font-size:6.5px;line-height:1.4}
+  .model-note{font-size:6px}
+  .tag-up,.tag-dn{font-size:6px;padding:0 2px}
+
+  /* ── Pages 5-8: 2 charts per page, 1 chart-row per page ── */
+  .chart-row{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:5px!important;
+    margin:0!important;
+    page-break-after:always;
+    page-break-inside:avoid;
+  }
+  .chart-card{border:0.5px solid #999;border-radius:0;break-inside:avoid}
+  .chart-card-head{padding:2px 4px;min-height:auto}
+  .chart-region-lbl,.chart-attr-lbl{font-size:6.5px}
+  .chart-sel-region,.chart-sel-attr{display:none!important}
+  .pred-badge{font-size:6px;padding:1px 4px;min-height:12px}
+  /* Height = A4 landscape ~170mm usable - head - badge ≈ 155px at 96dpi */
+  .chart-box{height:158px!important;padding:1px}
+
+  .print-title{display:block!important;font-size:10px;font-weight:700;text-align:center;margin-bottom:2px;color:#000}
+  .print-meta{display:block!important;font-size:7px;text-align:center;color:#444;margin-bottom:4px}
 }
 @media screen{
   .print-title,.print-meta{display:none}
@@ -249,8 +273,8 @@ table.bs tr:last-child td{border-bottom:none}
   </div>
 
   <!-- Rolling 12-release history tables -->
-  <div class="sec-title" style="margin-top:1rem">Release History — Last 12 Releases (latest marketing year, backfilled from prior year)</div>
-  <div class="tables-row" style="grid-template-columns:1fr 1fr">
+  <div class="sec-title rolling-sec-title" style="margin-top:1rem">Release History — Last 12 Releases (latest marketing year, backfilled from prior year)</div>
+  <div class="rolling-row">
     <div class="table-card">
       <div class="tc-head"><span>World — Release History</span></div>
       <div id="tbl-rolling-world"><div class="spinner">Loading...</div></div>
