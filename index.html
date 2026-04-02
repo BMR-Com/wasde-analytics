@@ -248,6 +248,19 @@ table.bs tr:last-child td{border-bottom:none}
     </div>
   </div>
 
+  <!-- Rolling 12-release history tables -->
+  <div class="sec-title" style="margin-top:1rem">Release History — Last 12 Releases (latest marketing year, backfilled from prior year)</div>
+  <div class="tables-row" style="grid-template-columns:1fr 1fr">
+    <div class="table-card">
+      <div class="tc-head"><span>World — Release History</span></div>
+      <div id="tbl-rolling-world"><div class="spinner">Loading...</div></div>
+    </div>
+    <div class="table-card">
+      <div class="tc-head"><span>United States — Release History</span></div>
+      <div id="tbl-rolling-us"><div class="spinner">Loading...</div></div>
+    </div>
+  </div>
+
   <!-- Summary -->
   <div class="summary-card">
     <div class="sec-title" style="margin-bottom:0">Analysis &amp; Prediction — World &amp; United States</div>
@@ -267,7 +280,8 @@ table.bs tr:last-child td{border-bottom:none}
   <!-- 6 Evolution Charts: 3 USA fixed + 3 World with dropdowns -->
   <div class="sec-title" style="margin-top:.5rem">Forecast Evolution Charts</div>
 
-  <!-- USA fixed charts -->
+  <!-- ── USA charts (fixed) ── -->
+  <div style="font-size:11px;font-weight:600;color:#1a2e1a;margin:.5rem 0 .4rem;padding-left:2px;opacity:.8">United States</div>
   <div class="chart-row">
     <div class="chart-card">
       <div class="chart-card-head"><span class="chart-region-lbl">USA</span><span class="chart-attr-lbl" id="lbl-c0"></span></div>
@@ -279,50 +293,54 @@ table.bs tr:last-child td{border-bottom:none}
       <div class="pred-badge" id="pred-c1"></div>
       <div class="chart-box"><canvas id="c1"></canvas></div>
     </div>
+  </div>
+  <div class="chart-row" style="margin-top:.75rem">
     <div class="chart-card">
       <div class="chart-card-head"><span class="chart-region-lbl">USA</span><span class="chart-attr-lbl" id="lbl-c2"></span></div>
       <div class="pred-badge" id="pred-c2"></div>
       <div class="chart-box"><canvas id="c2"></canvas></div>
     </div>
-  </div>
-
-  <!-- World charts with dropdowns -->
-  <div class="chart-row" style="margin-top:.75rem">
     <div class="chart-card">
-      <div class="chart-card-head">
-        <select id="csel-r3" class="chart-sel-region" onchange="renderSixCharts()"></select>
-        <select id="csel-a3" class="chart-sel-attr" onchange="renderSixCharts()"></select>
-      </div>
+      <div class="chart-card-head"><span class="chart-region-lbl">USA</span><span class="chart-attr-lbl" id="lbl-c3"></span></div>
       <div class="pred-badge" id="pred-c3"></div>
       <div class="chart-box"><canvas id="c3"></canvas></div>
     </div>
+  </div>
+
+  <!-- ── World charts (with region dropdown) ── -->
+  <div style="font-size:11px;font-weight:600;color:#1a2e1a;margin:.9rem 0 .4rem;padding-left:2px;opacity:.8">World / Custom Region</div>
+  <div class="chart-row" style="margin-top:.1rem">
     <div class="chart-card">
       <div class="chart-card-head">
-        <select id="csel-r4" class="chart-sel-region" onchange="renderSixCharts()"></select>
-        <select id="csel-a4" class="chart-sel-attr" onchange="renderSixCharts()"></select>
+        <select id="csel-r4" class="chart-sel-region" onchange="renderCharts()"></select>
+        <select id="csel-a4" class="chart-sel-attr" onchange="renderCharts()"></select>
       </div>
       <div class="pred-badge" id="pred-c4"></div>
       <div class="chart-box"><canvas id="c4"></canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-card-head">
-        <select id="csel-r5" class="chart-sel-region" onchange="renderSixCharts()"></select>
-        <select id="csel-a5" class="chart-sel-attr" onchange="renderSixCharts()"></select>
+        <select id="csel-r5" class="chart-sel-region" onchange="renderCharts()"></select>
+        <select id="csel-a5" class="chart-sel-attr" onchange="renderCharts()"></select>
       </div>
       <div class="pred-badge" id="pred-c5"></div>
       <div class="chart-box"><canvas id="c5"></canvas></div>
     </div>
   </div>
-
-  <!-- Additional fixed charts: USA Harvested + World Exports -->
   <div class="chart-row" style="margin-top:.75rem">
     <div class="chart-card">
-      <div class="chart-card-head"><span class="chart-region-lbl">USA</span><span class="chart-attr-lbl" id="lbl-c6"></span></div>
+      <div class="chart-card-head">
+        <select id="csel-r6" class="chart-sel-region" onchange="renderCharts()"></select>
+        <select id="csel-a6" class="chart-sel-attr" onchange="renderCharts()"></select>
+      </div>
       <div class="pred-badge" id="pred-c6"></div>
       <div class="chart-box"><canvas id="c6"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-card-head"><span class="chart-region-lbl">World</span><span class="chart-attr-lbl" id="lbl-c7"></span></div>
+      <div class="chart-card-head">
+        <select id="csel-r7" class="chart-sel-region" onchange="renderCharts()"></select>
+        <select id="csel-a7" class="chart-sel-attr" onchange="renderCharts()"></select>
+      </div>
       <div class="pred-badge" id="pred-c7"></div>
       <div class="chart-box"><canvas id="c7"></canvas></div>
     </div>
@@ -516,9 +534,10 @@ async function onCommodityChange(){
 
   for(let i=0;i<8;i++) renderTable(i);
   hideEmptyRows();
+  renderRollingTables();
   renderSummaryAndPrediction();
   initChartSelects();
-  renderSixCharts();
+  renderCharts();
 
   document.getElementById('print-title').textContent=
     'WASDE Balance Sheet — '+(currentData.commodity||'');
@@ -529,8 +548,10 @@ async function onCommodityChange(){
 function setLoading(){
   for(let i=0;i<8;i++)
     document.getElementById('tbl-'+i).innerHTML='<div class="spinner">Loading...</div>';
-  document.getElementById('summary-text').innerHTML='<div class="spinner">Loading...</div>';
-  document.getElementById('prediction-text').innerHTML='<div class="spinner">Loading...</div>';
+  ['tbl-rolling-world','tbl-rolling-us','summary-text','prediction-text'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML='<div class="spinner">Loading...</div>';
+  });
 }
 
 // ── Attribute helpers ─────────────────────────────────────────
@@ -879,6 +900,140 @@ function renderTable(i){
   hideEmptyRows();
 }
 
+// ── Rolling 12-release history table ─────────────────────────
+// Returns array of {mktYear, wasdeNum, relNum} for last 12 releases
+// from latest mktYear, backfilling from previous mktYear if needed.
+function getRolling12Slots(region){
+  // Collect all (mktYear, wasdeNum) pairs that exist for this region
+  const mktYears=[...currentData.marketYears].sort();
+  if(!mktYears.length) return [];
+
+  function wasdeNumsForRegionYear(yr){
+    const nums=new Set();
+    // Scan all data keys for this region+year
+    Object.keys(currentData.data).forEach(k=>{
+      const parts=k.split('||');
+      if(parts.length===3&&
+         parts[0].toLowerCase().replace(/\s+/g,' ')===region.toLowerCase().replace(/\s+/g,' ')&&
+         parts[2]===yr){
+        (currentData.data[k]||[]).forEach(d=>nums.add(d.wasdeNum));
+      }
+    });
+    return [...nums].sort((a,b)=>a-b);
+  }
+
+  const latestY=mktYears[mktYears.length-1];
+  const prevY  =mktYears.length>=2?mktYears[mktYears.length-2]:null;
+
+  const latestNums=wasdeNumsForRegionYear(latestY);
+
+  // Helper: get reportDate string for a wasdeNum from any data key
+  function getReportDate(wn){
+    for(const arr of Object.values(currentData.data)){
+      const e=arr.find(d=>d.wasdeNum===wn);
+      if(e&&e.reportDate) return e.reportDate;
+    }
+    return String(wn);
+  }
+
+  // Format reportDate → "Mar 26" style
+  function fmtSlotDate(rd){
+    if(!rd) return '—';
+    // Try parsing as date string e.g. "2026-03-10" or "March 2026"
+    const d=new Date(rd);
+    if(!isNaN(d.getTime())){
+      return d.toLocaleDateString('en-US',{month:'short',year:'2-digit'}).replace(', ',"'");
+    }
+    return rd; // fallback: show as-is
+  }
+
+  let slots=latestNums.map((wn,i)=>({
+    mktYear:latestY, wasdeNum:wn, relNum:i+1,
+    dateLabel:fmtSlotDate(getReportDate(wn))
+  }));
+
+  // Backfill from previous year if needed
+  if(slots.length<12&&prevY){
+    const needed=12-slots.length;
+    const prevNums=wasdeNumsForRegionYear(prevY);
+    const prevSlice=prevNums.slice(-needed);
+    const prevSlots=prevSlice.map((wn,i)=>({
+      mktYear:prevY,
+      wasdeNum:wn,
+      relNum:prevNums.length-prevSlice.length+i+1,
+      dateLabel:fmtSlotDate(getReportDate(wn))
+    }));
+    slots=[...prevSlots,...slots];
+  }
+
+  return slots.slice(-12); // max 12
+}
+
+function shortYr(mktYear){
+  // "2025/26" → "25/26"
+  return mktYear.replace(/^20/,'');
+}
+
+function buildRollingTable(region, tableType){
+  if(!region) return '<div class="no-avail">Not available</div>';
+
+  const slots=getRolling12Slots(region);
+  if(!slots.length) return '<div class="no-avail">No data</div>';
+
+  const attrs=sortDedupeAttrs(currentData.attributes, tableType);
+  if(!attrs.length) return '<div class="no-avail">No attributes</div>';
+
+  // Mark where the marketing year changes for a separator
+  let h='<div class="tbl-scroll"><table class="bs"><thead><tr>';
+  h+='<th class="ac" style="min-width:120px">Attribute</th>';
+  let prevMktY=null;
+  slots.forEach(sl=>{
+    const sep=prevMktY&&prevMktY!==sl.mktYear?'border-left:2px solid #9fe1cb;':'';
+    h+='<th style="font-size:8.5px;font-weight:500;color:#555;white-space:nowrap;'+sep+
+       '" title="'+sl.mktYear+'">'+sl.dateLabel+'</th>';
+    prevMktY=sl.mktYear;
+  });
+  h+='</tr></thead><tbody>';
+
+  let prevGroup=null;
+  attrs.forEach(attr=>{
+    const ra    =resolveAttr(attr);
+    const grp   =attrGroup(attr);
+    const sepCls=(prevGroup!==null&&grp!==prevGroup)?' sep-top':'';
+    prevGroup=grp;
+    const hlCls =isES(attr)?' hl-es':isProd(attr)?' hl-prod':'';
+
+    h+='<tr class="'+sepCls+hlCls+'"><td class="an" title="'+attr+'">'+attr+'</td>';
+
+    let prevSlotMktY=null;
+    slots.forEach(sl=>{
+      const series=getSeries(region,ra,sl.mktYear);
+      const entry =series.find(d=>d.wasdeNum===sl.wasdeNum);
+      const val   =entry?entry.value:null;
+      const ok    =entry?entry.unitOk!==false:true;
+      const cell  =val!==null?fmtNum(val):'—';
+      const sep   =prevSlotMktY&&prevSlotMktY!==sl.mktYear?'border-left:2px solid #c8d8c8;':'';
+      h+='<td style="'+sep+'">'+cell+'</td>';
+      prevSlotMktY=sl.mktYear;
+    });
+    h+='</tr>';
+  });
+
+  h+='</tbody></table></div>';
+  h+='<div class="tbl-legend"><div class="tll"><span style="font-size:9px;color:#777">│ = marketing year boundary</span></div></div>';
+  return h;
+}
+
+function renderRollingTables(){
+  if(!currentData) return;
+  const worldR=findRegionByKws(DEFAULT_REGIONS[0]);
+  const usR   =findRegionByKws(DEFAULT_REGIONS[1]);
+  const wEl=document.getElementById('tbl-rolling-world');
+  const uEl=document.getElementById('tbl-rolling-us');
+  if(wEl) wEl.innerHTML=worldR?buildRollingTable(worldR,'world'):'<div class="no-avail">World not available</div>';
+  if(uEl) uEl.innerHTML=usR   ?buildRollingTable(usR,'us')   :'<div class="no-avail">US not available</div>';
+}
+
 // ── Summary + prediction (World & US only) ───────────────────
 function renderSummaryAndPrediction(){
   const last2W=getLastNWasdeNums(2);
@@ -991,7 +1146,14 @@ function initChartSelects(){
   const regions=currentData.regions;
   const worldR=findRegionByKws(DEFAULT_REGIONS[0]);
 
-  for(let i=3;i<=5;i++){
+  // World panels 4-7 have dropdowns
+  const worldDefaults=[
+    [/^production/i],
+    [/^domestic.*total/i,/^domestic.use/i],
+    [/^ending.stock/i],
+    [/^export(?!s?,\s*total)/i,/^export/i],
+  ];
+  for(let i=4;i<=7;i++){
     const rSel=document.getElementById('csel-r'+i);
     const aSel=document.getElementById('csel-a'+i);
     if(rSel){
@@ -1000,9 +1162,8 @@ function initChartSelects(){
     }
     if(aSel){
       aSel.innerHTML=all_attrs_sorted.map(a=>'<option>'+a+'</option>').join('');
-      // Default attributes for world panels 3,4,5
-      const defAttr=findAttrMatch(WORLD_ATTRS[i-3]);
-      if(defAttr&&aSel) aSel.value=defAttr;
+      const defAttr=findAttrMatch(worldDefaults[i-4]);
+      if(defAttr) aSel.value=defAttr;
     }
   }
 }
@@ -1267,14 +1428,14 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
 }
 
 // ── Render all 8 charts ───────────────────────────────────────
-function renderSixCharts(){
+function renderCharts(){
   if(!currentData)return;
-  const usR   =findRegionByKws(DEFAULT_REGIONS[1]); // United States
-  const worldR=findRegionByKws(DEFAULT_REGIONS[0]); // World
+  const usR=findRegionByKws(DEFAULT_REGIONS[1]); // United States
 
-  // USA fixed panels 0,1,2: Planted, Production, Ending Stocks
+  // USA fixed panels 0-3: Planted, Harvested, Production, Ending Stocks
   const usaFixed=[
     [/^area.*(planted|seeded)/i, /^planted/i],
+    [/^area.*(harv)/i,           /^harvested/i],
     [/^production/i],
     [/^ending.stock/i],
   ];
@@ -1285,8 +1446,8 @@ function renderSixCharts(){
     renderOneChart(i, usR, ra, ra);
   });
 
-  // World dropdown panels 3,4,5
-  for(let i=3;i<=5;i++){
+  // World dropdown panels 4-7
+  for(let i=4;i<=7;i++){
     const rSel=document.getElementById('csel-r'+i);
     const aSel=document.getElementById('csel-a'+i);
     const region=rSel?rSel.value:null;
@@ -1294,19 +1455,10 @@ function renderSixCharts(){
     const ra    =attr?resolveAttr(attr):null;
     renderOneChart(i, region, ra, attr);
   }
-
-  // Fixed panel 6: USA Area Harvested
-  const raHarv=findAttrMatch([/^area.*(harv)/i, /^harvested/i]);
-  const lbl6=document.getElementById('lbl-c6');
-  if(lbl6)lbl6.textContent=raHarv||'Area Harvested';
-  renderOneChart(6, usR, raHarv, raHarv);
-
-  // Fixed panel 7: World Exports
-  const raExp=findAttrMatch([/^export(?!s?,\s*total)/i, /^export/i]);
-  const lbl7=document.getElementById('lbl-c7');
-  if(lbl7)lbl7.textContent=raExp||'Exports';
-  renderOneChart(7, worldR, raExp, raExp);
 }
+
+// keep old name as alias so toggleYear still works
+function renderSixCharts(){ renderCharts(); }
 
 // ── Marketing year pills ──────────────────────────────────────
 function buildPills(years){
@@ -1317,7 +1469,7 @@ function buildPills(years){
 function toggleYear(year,el){
   if(activeYears.has(year)){if(activeYears.size===1)return;activeYears.delete(year);el.classList.remove('active');}
   else{activeYears.add(year);el.classList.add('active');}
-  renderSixCharts();
+  renderCharts();
 }
 
 boot();
