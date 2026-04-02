@@ -76,8 +76,8 @@ table.bs tr:last-child td{border-bottom:none}
 .print-btn:hover{background:#2a4a2a}
 .no-avail{font-size:10px;color:#bbb;padding:.75rem;text-align:center}
 /* 6-panel chart styles */
-.chart-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem}
-@media(max-width:900px){.chart-row{grid-template-columns:1fr}}
+.chart-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
+@media(max-width:700px){.chart-row{grid-template-columns:1fr}}
 .chart-card{background:#fff;border:1px solid #e5e5e0;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
 .chart-card-head{background:#1a2e1a;padding:.35rem .65rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;min-height:30px}
 .chart-region-lbl{color:#fff;font-size:10px;font-weight:600;white-space:nowrap}
@@ -132,7 +132,7 @@ table.bs tr:last-child td{border-bottom:none}
   .model-note{font-size:7px}
   .tag-up,.tag-dn{font-size:7px;padding:0 3px}
 
-  .chart-row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important;margin-bottom:5px!important;page-break-inside:avoid}
+  .chart-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important;margin-bottom:5px!important;page-break-inside:avoid}
   .chart-card{border:0.5px solid #999;border-radius:0;break-inside:avoid;page-break-inside:avoid}
   .chart-card-head{padding:2px 5px}
   .chart-region-lbl,.chart-attr-lbl{font-size:7px}
@@ -965,7 +965,6 @@ const WORLD_ATTRS = [
 ];
 
 function findAttrMatch(patterns) {
-  if(!Array.isArray(patterns)) patterns=[patterns];
   for(const rx of patterns){
     const f=all_attrs_sorted.find(a=>rx.test(a.trim()));
     if(f)return resolveAttr(f);
@@ -1124,10 +1123,12 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
     const series=validSeries(region,resolvedAttr,mktYear);
     if(!series.length)return;
     if(!unit&&series[0].unit)unit=series[0].unit;
-    maxRel=Math.max(maxRel,series.length);
+    // Pad to 30 releases with null
+    const arr=new Array(30).fill(null);
+    series.forEach(p=>{ if(p.releaseNum<=30) arr[p.releaseNum-1]=p.value; });
     datasets.push({
       label:mktYear,
-      data:series.map(p=>p.value),          // plain array — index = releaseNum-1
+      data:arr,
       borderColor:COLORS[i%COLORS.length],
       backgroundColor:COLORS[i%COLORS.length]+'20',
       borderWidth:1.5,pointRadius:2,pointHoverRadius:4,
@@ -1150,13 +1151,13 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
     // Extend the latest-year line with a dashed segment to prediction
     const curSeries=validSeries(region,resolvedAttr,latestY);
     if(curSeries.length){
-      const lastVal=curSeries[curSeries.length-1].value;
-      const lastIdx=curSeries[curSeries.length-1].releaseNum-1;
-      const predIdx=pred.nextR-1;
-      maxRel=Math.max(maxRel,pred.nextR);
+      const lastPt=curSeries[curSeries.length-1];
+      const lastVal=lastPt.value;
+      const lastIdx=Math.min(lastPt.releaseNum-1, 29);
+      const predIdx=Math.min(pred.nextR-1, 29);
 
-      // Dashed connector line
-      const connector=new Array(predIdx+1).fill(null);
+      // Dashed connector (30-length array)
+      const connector=new Array(30).fill(null);
       connector[lastIdx]=lastVal;
       connector[predIdx]=pred.predVal;
       datasets.push({
@@ -1170,8 +1171,8 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
         tension:0
       });
 
-      // Prediction star point
-      const starData=new Array(predIdx+1).fill(null);
+      // Star prediction point (30-length array)
+      const starData=new Array(30).fill(null);
       starData[predIdx]=pred.predVal;
       datasets.push({
         label:'Pred '+latestY,
@@ -1197,7 +1198,8 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
     }
   }else if(badge){badge.innerHTML='';}
 
-  const labels=Array.from({length:maxRel},(_,i)=>'R'+(i+1));
+  const MAX_X = 30;
+  const labels=Array.from({length:MAX_X},(_,i)=>'R'+(i+1));
 
   if(sixCharts[idx])sixCharts[idx].destroy();
   sixCharts[idx]=new Chart(canvas,{
@@ -1221,7 +1223,7 @@ function renderOneChart(idx, region, resolvedAttr, attrLabel){
         }}
       },
       scales:{
-        x:{ticks:{font:{size:8},maxTicksLimit:12}},
+        x:{ticks:{font:{size:8},maxTicksLimit:15}},
         y:{ticks:{font:{size:8},callback:v=>v.toLocaleString()}}
       }
     }
@@ -1235,7 +1237,7 @@ function renderSixCharts(){
 
   // USA panels 0,1,2 — fixed region, fixed attributes
   const usaAttrPatterns=[
-    [/^area.*(planted|seeded)/i],
+    [/^area.*(planted|seeded)/i, /^planted/i],
     [/^production/i],
     [/^ending.stock/i],
   ];
