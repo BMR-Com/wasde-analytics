@@ -1171,7 +1171,7 @@ function renderSummaryAndPrediction(){
       predH+='<li>'+tag+' <strong>'+m.attr+'</strong>'+dlab+' ('+m.region+'): '+
              fmtNum(m.lastVal)+' → '+fmtNum(m.nextVal)+' '+m.unit+'</li>';
     });
-    #predH+='</ul><p class="model-note">★ Prediction model: best of (1) average month-on-month change at current release position, trained on earlier years, vs (2) ratio evolution — value[next] / value[best prior release], selected by lowest out-of-sample RMSE on 4 holdout years. Only Ending Stocks uses the empirical balance-sheet formula. '+NR_MONTH+'.</p>';
+    predH+='</ul><p class="model-note">★ Prediction model: prop. '+NR_MONTH+'.</p>';
   }
   document.getElementById('prediction-text').innerHTML=predH;
 }
