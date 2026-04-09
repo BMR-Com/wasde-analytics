@@ -2,6 +2,9 @@ name: Monthly WASDE update
 
 on:
   schedule:
+    - cron: '0 20 9 * *'   # Run on 9th, 10th, 11th, 12th to catch release
+    - cron: '0 20 10 * *'
+    - cron: '0 20 11 * *'
     - cron: '0 20 12 * *'
   workflow_dispatch:
 
@@ -25,9 +28,10 @@ jobs:
 
       - name: Run pipeline
         env:
-          GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: python process.py json-from-release
+          GITHUB_TOKEN:       ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY:  ${{ github.repository }}
+          MASTER_CSV_PATH:    master_wasde.csv
+        run: python process.py full   # <-- CHANGED: was json-from-release
 
       - name: Commit & push updated JSONs
         run: |
