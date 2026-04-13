@@ -96,7 +96,12 @@ table.bs tr:last-child td{border-bottom:none}
 .chart-box{position:relative;height:200px;padding:4px}
 
 /* ── Print styles ──────────────────────────────────────────── */
+@media screen{
+  .print-title,.print-meta{display:none}
+  .prt-lbl{display:none}
+}
 @media print {
+  .summary-card{display:none!important;}
   @page{size:A4 landscape;margin:7mm 7mm 7mm 7mm}
   body{background:#fff;color:#000;font-size:8px}
 
@@ -189,10 +194,6 @@ table.bs tr:last-child td{border-bottom:none}
 
   .print-title{display:block!important;font-size:10px;font-weight:700;text-align:center;margin-bottom:2px;color:#000}
   .print-meta{display:block!important;font-size:7px;text-align:center;color:#444;margin-bottom:4px}
-}
-@media screen{
-  .print-title,.print-meta{display:none}
-  .prt-lbl{display:none}
 }
 </style>
 <base target="_blank">
@@ -287,7 +288,7 @@ table.bs tr:last-child td{border-bottom:none}
   </div>
 
   <!-- Rolling 12-release history tables -->
-  <div class="sec-title rolling-sec-title" style="margin-top:1rem">Release History — Last 12 Releases (latest marketing year, backfilled from prior year)</div>
+  <div class="sec-title rolling-sec-title" style="margin-top:1rem">Release History — Last 8 Releases (latest marketing year, backfilled from prior year)</div>
   <div class="rolling-row">
     <div class="table-card">
       <div class="tc-head"><span>World — Release History</span></div>
@@ -969,7 +970,7 @@ function renderTable(i){
 // ── Rolling 12-release history table ─────────────────────────
 // Returns array of {mktYear, wasdeNum, relNum} for last 12 releases
 // from latest mktYear, backfilling from previous mktYear if needed.
-function getRolling12Slots(region){
+function getRolling8Slots(region){
   // Collect all (mktYear, wasdeNum) pairs that exist for this region
   const mktYears=[...currentData.marketYears].sort();
   if(!mktYears.length) return [];
@@ -1041,7 +1042,7 @@ function getRolling12Slots(region){
     slots=[...prevSlots,...slots];
   }
 
-  return slots.slice(-12); // max 12
+  return slots.slice(-8); // max 12
 }
 
 function shortYr(mktYear){
@@ -1052,7 +1053,7 @@ function shortYr(mktYear){
 function buildRollingTable(region, tableType){
   if(!region) return '<div class="no-avail">Not available</div>';
 
-  const slots=getRolling12Slots(region);
+  const slots=getRolling8Slots(region);
   if(!slots.length) return '<div class="no-avail">No data</div>';
 
   const attrs=sortDedupeAttrs(currentData.attributes, tableType);
