@@ -302,7 +302,7 @@ table.bs tr:last-child td{border-bottom:none}
   </div>
 
   <!-- Summary -->
-  <div class="summary-card">
+  <div class="summary-card" style="display:none">
     <div class="sec-title" style="margin-bottom:0">Analysis &amp; Prediction — World &amp; United States</div>
     <div class="summary-grid">
       <div class="sb">
@@ -1010,9 +1010,18 @@ function getRolling12Slots(region){
     // Try parsing as date string e.g. "2026-03-10" or "March 2026"
     const d=new Date(rd);
     if(!isNaN(d.getTime())){
-      return d.toLocaleDateString('en-US',{month:'short',year:'2-digit'}).replace(', ',"'");
+      return d.toLocaleDateString('en-US',{month:'short',year:'2-digit'}).replace(', ',' ').replace("'",'');
     }
-    return rd; // fallback: show as-is
+    // If not a parseable date, try to abbreviate month names manually
+    let abbreviated=rd.replace(/January (\d{4})/,'Jan $1').replace(/February (\d{4})/,'Feb $1')
+                     .replace(/March (\d{4})/,'Mar $1').replace(/April (\d{4})/,'Apr $1')
+                     .replace(/May (\d{4})/,'May $1').replace(/June (\d{4})/,'Jun $1')
+                     .replace(/July (\d{4})/,'Jul $1').replace(/August (\d{4})/,'Aug $1')
+                     .replace(/September (\d{4})/,'Sep $1').replace(/October (\d{4})/,'Oct $1')
+                     .replace(/November (\d{4})/,'Nov $1').replace(/December (\d{4})/,'Dec $1');
+    // Shorten 4-digit year to 2-digit
+    abbreviated=abbreviated.replace(/(\d{4})$/,function(m){return m.slice(-2)});
+    return abbreviated;
   }
 
   let slots=latestNums.map((wn,i)=>({
