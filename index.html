@@ -31,12 +31,12 @@ select.wide{min-width:200px}
 .tc-head select option{background:#1a2e1a}
 .tbl-scroll{overflow-x:auto}
 table.bs{width:100%;border-collapse:collapse;font-size:10px}
-table.bs th{background:#f5f5f3;padding:3px 5px;text-align:center;font-weight:500;color:#555;border-bottom:1px solid #e5e5e0;white-space:nowrap}
-table.bs th.ac{text-align:left;min-width:110px;max-width:130px}
+table.bs th{background:#f5f5f3;padding:2px 3px;text-align:center;font-weight:500;color:#555;border-bottom:1px solid #e5e5e0;white-space:nowrap;font-size:9px}
+table.bs th.ac{text-align:left;min-width:180px;max-width:250px}
 table.bs th.yg{background:#edf2ed;color:#1a2e1a;font-size:9px;border-bottom:1px solid #c8d8c8}
 table.bs th.pg{background:#fff8e6;color:#7a5000;font-size:9px;border-bottom:1px solid #e8d8a0}
-table.bs td{padding:2px 5px;border-bottom:1px solid #f0f0ee;text-align:right;white-space:nowrap;font-size:10px}
-table.bs td.an{text-align:left;color:#333;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+table.bs td{padding:1px 3px;border-bottom:1px solid #f0f0ee;text-align:right;white-space:nowrap;font-size:9px}
+table.bs td.an{text-align:left;color:#333;max-width:250px;white-space:nowrap}
 table.bs tr.hl-es td{background:#fef9e7;font-weight:600}
 table.bs tr.hl-es td.an{color:#7a5000}
 table.bs tr.hl-es:hover td{background:#fef3c7}
@@ -79,10 +79,10 @@ table.bs tr:last-child td{border-bottom:none}
 .rolling-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
 @media(max-width:700px){.rolling-row{grid-template-columns:1fr}}
 /* Compact cell sizing so 13 cols fit without scrolling */
-.rolling-row table.bs th.ac{min-width:90px;max-width:110px;font-size:9px}
-.rolling-row table.bs th{padding:2px 3px;font-size:8px}
-.rolling-row table.bs td{padding:2px 3px;font-size:9px;white-space:nowrap}
-.rolling-row table.bs td.an{max-width:110px;font-size:9px}
+.rolling-row table.bs th.ac{min-width:140px;max-width:180px;font-size:9px}
+.rolling-row table.bs th{padding:1px 2px;font-size:8px}
+.rolling-row table.bs td{padding:1px 2px;font-size:8px;white-space:nowrap}
+.rolling-row table.bs td.an{max-width:180px;font-size:9px}
 .rolling-row .tbl-scroll{overflow-x:auto}   /* fallback only */
 .chart-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
 @media(max-width:700px){.chart-row{grid-template-columns:1fr}}
@@ -138,10 +138,10 @@ table.bs tr:last-child td{border-bottom:none}
   }
   .rolling-row .tbl-scroll{overflow:visible!important}
   .rolling-row table.bs{font-size:5.5px!important;table-layout:fixed;width:100%}
-  .rolling-row table.bs th.ac{min-width:65px!important;max-width:75px!important;font-size:5px!important}
+  .rolling-row table.bs th.ac{min-width:100px!important;max-width:140px!important;font-size:5px!important}
   .rolling-row table.bs th{padding:1px 2px!important;font-size:5px!important;white-space:nowrap!important}
   .rolling-row table.bs td{padding:0.5px 2px!important;font-size:5.5px!important;white-space:nowrap!important}
-  .rolling-row table.bs td.an{max-width:75px!important;overflow:hidden;text-overflow:ellipsis}
+  .rolling-row table.bs td.an{max-width:140px!important}
   .rolling-row .tbl-legend{display:none!important}
   .rolling-row .tc-head{padding:2px 4px;font-size:7px}
 
@@ -197,6 +197,7 @@ table.bs tr:last-child td{border-bottom:none}
   .prt-lbl{display:none}
 }
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -639,10 +640,20 @@ function validSeries(region,attr,mktYear){
 }
 function getCanonUnit(region,attr){
   if(!currentData.unitMap)return'';
+  // Fix cotton price unit - should be c/lb not 480 lb bales
+  if(attr&&/price/i.test(attr)){
+    const comm=currentData.commodity||'';
+    if(/cotton/i.test(comm)) return 'c/lb';
+  }
   const key=region+'||'+attr;
   const norm=key.toLowerCase().replace(/\s+/g,' ');
   const found=Object.keys(currentData.unitMap).find(k=>k.toLowerCase().replace(/\s+/g,' ')===norm);
-  return found?currentData.unitMap[found]:'';
+  let unit=found?currentData.unitMap[found]:'';
+  // Additional fix: if unit contains "480" and attribute is price-related, it's wrong
+  if(unit&&/480/.test(unit)&&attr&&/price/i.test(attr)){
+    return 'c/lb';
+  }
+  return unit;
 }
 function findRegionByKws(kws){
   return currentData.regions.find(r=>kws.some(k=>r.toLowerCase().includes(k)))||null;
@@ -825,7 +836,19 @@ function buildTable(region, tableType){
   last2W.forEach(wn=>{
     for(const arr of Object.values(currentData.data)){
       const f=arr.find(d=>d.wasdeNum===wn);
-      if(f){wLabels[wn]=f.reportDate||('W'+wn);break;}
+      if(f){
+        let rd=f.reportDate||('W'+wn);
+        // Abbreviate: February 2025 -> Feb 25
+        rd=rd.replace(/January (\d{4})/,'Jan $1').replace(/February (\d{4})/,'Feb $1')
+             .replace(/March (\d{4})/,'Mar $1').replace(/April (\d{4})/,'Apr $1')
+             .replace(/May (\d{4})/,'May $1').replace(/June (\d{4})/,'Jun $1')
+             .replace(/July (\d{4})/,'Jul $1').replace(/August (\d{4})/,'Aug $1')
+             .replace(/September (\d{4})/,'Sep $1').replace(/October (\d{4})/,'Oct $1')
+             .replace(/November (\d{4})/,'Nov $1').replace(/December (\d{4})/,'Dec $1')
+             .replace(/(\d{4})$/,function(m){return m.slice(-2)});
+        wLabels[wn]=rd;
+        break;
+      }
     }
   });
 
