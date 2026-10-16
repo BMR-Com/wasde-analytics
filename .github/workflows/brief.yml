@@ -1,0 +1,28 @@
+name: Weekly brief refresh
+
+# Rebuilds the WASDE brief so the cotton outlook uses the latest crop progress (Mon),
+# export sales (Thu), COT (Fri) and on-call data between WASDE releases.
+on:
+  schedule:
+    - cron: '0 15 * * 2'   # Tue, after Monday crop progress
+    - cron: '0 15 * * 6'   # Sat, after Thursday export sales and Friday COT / on-call
+  workflow_dispatch:
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas numpy requests -q
+      - run: python brief.py
+      - name: Commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/brief
+          if git diff --staged --quiet; then echo "No changes"; else git commit -m "brief: weekly refresh $(date +'%Y-%m-%d')" && git push; fi

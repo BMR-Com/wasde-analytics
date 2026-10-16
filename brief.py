@@ -209,9 +209,14 @@ def fmt(v, nd=2, sign=False):
 
 
 # ─────────────────────────── cotton deep dive ───────────────────────────
-def cotton_checks(df, rd, prev, my, ctx):
-    y0 = int(my[:4]); out = {}; cut = rd + pd.Timedelta(days=9)          # WASDE ≈ 9th–12th
-    pcut = prev + pd.Timedelta(days=9) if prev is not None else None
+def cotton_checks(df, rd, prev, my, ctx, cut=None, pcut=None):
+    """cut = data cut-off (report day for WASDE commentary, latest for the outlook);
+    pcut = comparison point (previous report, or this report when looking at what changed since)."""
+    y0 = int(my[:4]); out = {"asof": None}
+    cut = cut if cut is not None else rd + pd.Timedelta(days=9)          # WASDE ≈ 9th–12th
+    if pcut is None and prev is not None:
+        pcut = prev + pd.Timedelta(days=9)
+    out["asof"] = cut.strftime("%Y-%m-%d")
     us_prod = get(df, "United States", "Production", my, rd); planted = get(df, "United States", "Planted", my, rd)
     prod_prev = get(df, "United States", "Production", my, prev) if prev is not None else None
 
@@ -250,13 +255,16 @@ def cotton_checks(df, rd, prev, my, ctx):
                 out["implied"] = {"prod": round(impl, 2), "band": round(sd * planted / 480, 2), "usda": us_prod,
                                   "gap": round(us_prod - impl, 2), "lb_planted_usda": round(us_prod * 480 / planted), "lb_planted_impl": round(lbpa)}
 
+    # Texas drought: readings through end-October decide abandonment; after that the end-October reading is final.
     dr = ctx.get("drought")
-    if dr is not None and rd.month in (5, 6, 7, 8, 9, 10):
-        s = dr[dr.index <= cut]
+    oct_end = pd.Timestamp(year=y0, month=10, day=31)
+    if dr is not None and pd.Timestamp(year=y0, month=5, day=1) <= rd <= pd.Timestamp(year=y0 + 1, month=1, day=31):
+        ec = min(cut, oct_end); s = dr[dr.index <= ec]
         if len(s):
-            out["tx_drought"] = {"week": s.index[-1].strftime("%Y-%m-%d"), "D2_D4": float(s.iloc[-1]),
-                                 "prev_report": float(dr[dr.index <= pcut].iloc[-1]) if pcut is not None else None,
-                                 "last_year": float(dr[dr.index <= cut - pd.DateOffset(years=1)].iloc[-1])}
+            pv = dr[dr.index <= min(pcut, oct_end)] if pcut is not None else None
+            out["tx_drought"] = {"week": s.index[-1].strftime("%Y-%m-%d"), "D2_D4": float(s.iloc[-1]), "final": bool(cut > oct_end),
+                                 "prev_report": float(pv.iloc[-1]) if pv is not None and len(pv) else None,
+                                 "last_year": float(dr[dr.index <= ec - pd.DateOffset(years=1)].iloc[-1])}
 
     # US export sales pace vs USDA
     es = ctx.get("esr"); usda_exp = get(df, "United States", "Exports", my, rd)
@@ -330,8 +338,8 @@ def cotton_checks(df, rd, prev, my, ctx):
     return out
 
 
-def cotton_outlook(df, rd, prev, my, ch, hist, chk):
-    """Factor-by-factor read and an overall tilt. Plain rules, stated in the text."""
+def cotton_outlook(df, rd, prev, my, ch, hist, rep_, chk):
+    """Factor-by-factor read and an overall tilt. Balance sheet from the report; everything else from the latest data."""
     F = []
     def add(name, tilt, text):
         F.append({"factor": name, "tilt": tilt, "text": text})
@@ -349,18 +357,18 @@ def cotton_outlook(df, rd, prev, my, ch, hist, chk):
     if im:
         g = im["gap"]; tilt = "bullish" if g > 0.5 * im["band"] else "bearish" if g < -0.5 * im["band"] else "neutral"
         add("US crop vs conditions", tilt,
-            f"Late-season crop ratings point to about {fmt(im['prod'])}m bales (±{fmt(im['band'], 1)}m) vs USDA {fmt(im['usda'])}m — "
+            f"Latest crop ratings ({chk['conditions']['week']}) point to about {fmt(im['prod'])}m bales (±{fmt(im['band'], 1)}m) vs USDA {fmt(im['usda'])}m — "
             + ("USDA looks generous; downside risk to its crop." if tilt == "bullish" else "USDA looks conservative; upside risk to its crop." if tilt == "bearish" else "USDA is within the normal range implied by conditions."))
-    tx = chk.get("tx_drought")
-    if tx and tx.get("prev_report") is not None and rd.month in (6, 7, 8, 9, 10):
-        d = tx["D2_D4"] - tx["prev_report"]
+    tx = chk.get("tx_drought"); txr = rep_.get("tx_drought")
+    if tx and txr and txr.get("prev_report") is not None:
+        d = tx["D2_D4"] - txr["prev_report"]          # change across the window USDA had not yet priced in
         if abs(d) >= 8:
-            add("Texas drought", "bullish" if d > 0 else "bearish", f"Texas D2–D4 drought {tx['D2_D4']:.0f}% of area ({d:+.0f} pts since the last report).")
+            add("Texas drought", "bullish" if d > 0 else "bearish", f"Texas D2–D4 drought {tx['D2_D4']:.0f}% of area (week of {tx['week']}; {d:+.0f} pts since the previous report).")
     ex = chk.get("export_sales")
     if ex and ex.get("pace_5y"):
         d = ex["pace"] - ex["pace_5y"]
         add("US export sales", "bullish" if d > 0.05 else "bearish" if d < -0.05 else "neutral",
-            f"US commitments {fmt(ex['commit_mrb'])}m running bales = {ex['pace']*100:.0f}% of USDA's {fmt(ex['usda'], 1)}m target vs a 5-yr norm of "
+            f"Week ending {ex['week']}: US commitments {fmt(ex['commit_mrb'])}m running bales = {ex['pace']*100:.0f}% of USDA's {fmt(ex['usda'], 1)}m target vs a 5-yr norm of "
             f"{ex['pace_5y']*100:.0f}% at this point — " + ("ahead of pace, supports the target or a raise." if d > 0.05 else "behind pace, risk of a cut." if d < -0.05 else "on pace."))
     b = chk.get("brazil")
     if b and b.get("pace_norm"):
@@ -372,18 +380,18 @@ def cotton_outlook(df, rd, prev, my, ch, hist, chk):
     if cot and cot.get("mm_idx") is not None:
         i_ = cot["mm_idx"]
         add("Speculators", "bearish" if i_ > 80 else "bullish" if i_ < 20 else "neutral",
-            f"Managed money net {cot['mm_net']/1000:+.1f}k (3-yr COT index {i_:.0f}) — " + ("crowded long, liquidation risk." if i_ > 80 else "short and crowded, covering fuel." if i_ < 20 else "not at an extreme."))
+            f"COT {cot['date']}: managed money net {cot['mm_net']/1000:+.1f}k (3-yr COT index {i_:.0f}) — " + ("crowded long, liquidation risk." if i_ > 80 else "short and crowded, covering fuel." if i_ < 20 else "not at an extreme."))
     if oc and cot and cot.get("ls_pct") is not None:
         n_old = oc["S_old"] - oc["P_old"]; lp = cot["ls_pct"]
         tilt = "bullish" if n_old > 0 and lp < 30 else "bearish" if lp > 70 else "neutral"
-        add("Mill fixation", tilt, f"Net old-crop on-call {n_old/1000:+.1f}k contracts; commercials' old-crop long/short ratio at the {lp:.0f}th pct of 3 yrs — "
+        add("Mill fixation", tilt, f"On-call {oc['date']}: net old-crop {n_old/1000:+.1f}k contracts; commercials' old-crop long/short ratio at the {lp:.0f}th pct of 3 yrs — "
             + ("mills light on futures cover, fixing should add buying." if tilt == "bullish" else "commercials already long, fixing can pass by EFP." if tilt == "bearish" else "cover in its normal range."))
     score = sum(1 if f["tilt"] == "bullish" else -1 if f["tilt"] == "bearish" else 0 for f in F)
     label = "bullish" if score >= 2 else "modestly bullish" if score == 1 else "bearish" if score <= -2 else "modestly bearish" if score == -1 else "neutral"
     return F, score, label
 
 
-def cotton_text(df, rd, prev, my, ch, hist, chk, F, label):
+def cotton_text(df, rd, prev, my, ch, hist, chk, now, F, label, is_latest):
     T = []
     us = next((r for r in ch if r["region"] == "United States"), {}); wl = next((r for r in ch if r["region"] == "World"), {})
     wxc = next((r for r in ch if r["region"] == "World Less China"), {})
@@ -425,21 +433,47 @@ def cotton_text(df, rd, prev, my, ch, hist, chk, F, label):
             t += (f" Late-season ratings imply about {fmt(im['prod'])}m bales (±{fmt(im['band'],1)}m; {im['lb_planted_impl']} lb per planted acre vs USDA's "
                   f"{im['lb_planted_usda']}) — USDA is {fmt(abs(im['gap']),2)}m {'above' if im['gap'] > 0 else 'below'} that.")
         if tx:
-            t += f" Texas area in D2–D4 drought: {tx['D2_D4']:.0f}% (last report {fmt(tx['prev_report'],0)}%, a year ago {tx['last_year']:.0f}%)."
-            if tx.get("prev_report") is not None and tx["D2_D4"] - tx["prev_report"] >= 8 and (pc or 0) >= 0:
+            if tx.get("final"):
+                t += (f" End-October Texas D2–D4 drought, which sets abandonment: {tx['D2_D4']:.0f}% of area vs {tx['last_year']:.0f}% a year ago"
+                      + (" — a dry finish, so watch for higher abandonment in USDA's final numbers." if tx["D2_D4"] - tx["last_year"] >= 10 else "."))
+            else:
+                t += f" Texas area in D2–D4 drought: {tx['D2_D4']:.0f}% (last report {fmt(tx['prev_report'],0)}%, a year ago {tx['last_year']:.0f}%)."
+            if not tx.get("final") and tx.get("prev_report") is not None and tx["D2_D4"] - tx["prev_report"] >= 8 and (pc or 0) >= 0:
                 t += " **Drought in Texas has spread sharply since the last report while USDA did not cut — risk of higher abandonment and a smaller crop in later reports.**"
         T.append({"h": "Crop vs conditions", "t": t})
+    # did USDA's export revision agree with sales pace at the time of the report?
+    ex = chk.get("export_sales")
+    if ex and ex.get("pace_5y") and ex.get("usda_prev") is not None:
+        d = ex["pace"] - ex["pace_5y"]; dx = ex["usda"] - ex["usda_prev"]
+        t = (f"At the report, commitments were {ex['pace']*100:.0f}% of the export target vs a 5-yr norm of {ex['pace_5y']*100:.0f}%; USDA "
+             + (f"{'raised' if dx > 0 else 'cut'} exports {abs(dx):.2f}m to {ex['usda']:.2f}m." if abs(dx) > 0.01 else f"left exports at {ex['usda']:.2f}m."))
+        if (d < -0.05 and dx >= 0) or (d > 0.05 and dx <= 0):
+            t += f" **Sales pace argued for a {'cut' if d < 0 else 'raise'} — we disagree with USDA here.**"
+        T.append({"h": "Export target vs sales pace", "t": t})
+    # what has happened since the report (latest data, drives the outlook)
+    lab = "Latest data (drives the outlook)" if is_latest else "Data up to the next report (drives the outlook)"
+    S = []
+    cn, cr = now.get("conditions"), chk.get("conditions")
+    if cn and cr and cn["week"] != cr["week"]:
+        S.append(f"Crop ratings {cn['GE']:.0f}% G/E, {cn['PVP']:.0f}% P/VP (week of {cn['week']}; {cn['GE']-cr['GE']:+.0f} pts G/E since the report)"
+                 + (f", harvest {cn['harvested_pct']:.0f}% done" if cn.get("harvested_pct") is not None else "") + ".")
+    imn, imr = now.get("implied"), chk.get("implied")
+    if imn and imr and abs(imn["prod"] - imr["prod"]) >= 0.05:
+        S.append(f"Ratings-implied crop now {fmt(imn['prod'])}m bales (was {fmt(imr['prod'])}m at the report).")
     for f in F:
-        if f["factor"] in ("US export sales", "Brazil exports"):
-            T.append({"h": f["factor"], "t": f["text"]})
+        if f["factor"] in ("US export sales", "Brazil exports", "Texas drought"):
+            S.append(f["text"])
+    if S:
+        T.append({"h": lab, "t": " ".join(S)})
     pos = [f["text"] for f in F if f["factor"] in ("Speculators", "Mill fixation")]
     if pos:
         T.append({"h": "Positioning", "t": " ".join(pos)})
     bull = [f["factor"] for f in F if f["tilt"] == "bullish"]; bear = [f["factor"] for f in F if f["tilt"] == "bearish"]
-    pxs = chk.get("price")
+    pxs = now.get("price")
     T.append({"h": "Price outlook", "t":
               f"**{label.capitalize()}.** " + (f"Supportive: {', '.join(bull)}. " if bull else "") + (f"Weighing: {', '.join(bear)}. " if bear else "")
-              + (f"ICE front month {pxs['close']:.2f}¢ ({pxs['chg_1m']*100:+.1f}% over the past month). " if pxs else "")
+              + (f"ICE front month {pxs['close']:.2f}¢ on {pxs['date']} ({pxs['chg_1m']*100:+.1f}% over the past month). " if pxs else "")
+              + f"Outlook uses the latest crop progress, export sales, COT and on-call data available through {now['asof']}. "
               + "Watch the next crop progress and export sales releases to confirm or challenge USDA's numbers."})
     return T
 
@@ -491,10 +525,14 @@ def main():
                 ("United States", "Ending Stocks"), ("World", "Production"), ("World", "Domestic Use"), ("World", "Ending Stocks"),
                 ("World Less China", "Ending Stocks"), ("China", "Imports"), ("Brazil", "Exports"), ("India", "Production")]]
         hist = [h for h in hist if h]
-        chk = cotton_checks(cot_df, rd, prev, my, ctx)
-        F, score, label = cotton_outlook(cot_df, rd, prev, my, ch, hist, chk)
-        cotton = {"my": my, "changes": ch, "history": hist, "checks": chk, "factors": F, "score": score, "outlook": label,
-                  "brief": cotton_text(cot_df, rd, prev, my, ch, hist, chk, F, label)}
+        nxt = all_rels[i + 1] if i + 1 < len(all_rels) else None
+        rcut = rd + pd.Timedelta(days=9)
+        ncut = (nxt + pd.Timedelta(days=8)) if nxt is not None else pd.Timestamp.now().normalize()
+        chk = cotton_checks(cot_df, rd, prev, my, ctx, cut=rcut)                 # what was known at the report
+        now = cotton_checks(cot_df, rd, prev, my, ctx, cut=ncut, pcut=rcut)      # latest (or up to the next report)
+        F, score, label = cotton_outlook(cot_df, rd, prev, my, ch, hist, chk, now)
+        cotton = {"my": my, "changes": ch, "history": hist, "checks": chk, "latest": now, "factors": F, "score": score, "outlook": label,
+                  "brief": cotton_text(cot_df, rd, prev, my, ch, hist, chk, now, F, label, nxt is None)}
         oth = {}
         for n, d in others.items():
             if rd in set(d.rd.unique()):

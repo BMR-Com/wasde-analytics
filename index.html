@@ -585,6 +585,7 @@ async function boot(){
     document.getElementById('last-updated').textContent='Updated: '+manifest.lastUpdated;
     const sel=document.getElementById('sel-commodity');
     sel.innerHTML=manifest.commodities.map(c=>'<option value="'+c.file+'">'+c.commodity+'</option>').join('');
+    if(manifest.commodities.some(c=>c.file==='Cotton.json')) sel.value='Cotton.json';
     await onCommodityChange();
   }catch(e){
     for(let i=0;i<8;i++)
@@ -1616,6 +1617,6 @@ function toggleYear(year,el){
 
 boot();
 </script>
-<script src="js/brief.js?v=2026.10.16b"></script>
+<script src="js/brief.js?v=2026.10.16c"></script>
 </body>
 </html>

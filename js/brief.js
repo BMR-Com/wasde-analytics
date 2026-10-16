@@ -53,7 +53,7 @@
     var text = B.brief.map(function (b) { return '<div class="bk-h">' + b.h + '</div><p>' + md(b.t) + '</p>'; }).join('');
     var html = '<div class="bk-top"><div class="bk-title">' + CUR.label + ' WASDE · ' + COM + ' · ' + B.my + '</div>' + badge + '</div>';
     if (COM === 'Cotton') {
-      html += '<div class="bk-grid"><div class="bk-text">' + text + '</div><div><div class="bk-sub">Fundamentals check</div>' + factorTable(B.factors) + '</div></div>';
+      html += '<div class="bk-grid"><div class="bk-text">' + text + '</div><div><div class="bk-sub">Fundamentals check — latest data' + (B.latest && B.latest.asof ? ' through ' + B.latest.asof : '') + '</div>' + factorTable(B.factors) + '</div></div>';
       html += '<div class="bk-sub">Key changes — world and major countries (million 480-lb bales)</div><div class="bk-scroll">' + changesTable(B.changes, '') + '</div>';
     } else {
       html += '<div class="bk-text">' + text + '</div><div class="bk-sub">Key changes</div><div class="bk-scroll">' + changesTable(B.changes, B.unit) + '</div>';
