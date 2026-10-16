@@ -247,15 +247,6 @@ table.bs tbody tr:nth-child(even) td{background:#fafaf8}
   <div style="margin-left:auto;font-size:10px;opacity:.7">Predictions for next release</div>
 </div>
 
-<div class="top-controls">
-  <div class="ctrl">
-    <label>Commodity</label>
-    <select id="sel-commodity" class="wide" onchange="onCommodityChange()">
-      <option>Loading...</option>
-    </select>
-  </div>
-  <div style="font-size:11px;color:#888;padding-top:12px">Balance sheets update automatically after each WASDE release</div>
-</div>
 
 <div class="section" id="bkSec">
   <div class="sec-title">WASDE Brief — what changed, how it compares with history, and what it means</div>
@@ -268,6 +259,16 @@ table.bs tbody tr:nth-child(even) td{background:#fafaf8}
     </div>
     <div id="bkBody"><div class="spinner">Loading brief…</div></div>
   </div>
+</div>
+
+<div class="top-controls">
+  <div class="ctrl">
+    <label>Balance sheets &amp; charts below — commodity</label>
+    <select id="sel-commodity" class="wide" onchange="onCommodityChange()">
+      <option>Loading...</option>
+    </select>
+  </div>
+  <div style="font-size:11px;color:#888;padding-top:12px">Balance sheets update automatically after each WASDE release</div>
 </div>
 
 <div class="section">
@@ -1615,6 +1616,6 @@ function toggleYear(year,el){
 
 boot();
 </script>
-<script src="js/brief.js?v=2026.10.16"></script>
+<script src="js/brief.js?v=2026.10.16b"></script>
 </body>
 </html>

@@ -72,7 +72,7 @@
   fetch('./data/brief/index.json?t=' + Date.now()).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
     IDX = d;
     var sel = $('bkReport');
-    sel.innerHTML = d.reports.map(function (r) { return '<option value="' + r.report + '">' + r.label + ' — cotton ' + r.cotton_outlook + '</option>'; }).join('');
+    sel.innerHTML = d.reports.map(function (r) { return '<option value="' + r.report + '">' + r.label + ' WASDE</option>'; }).join('');
     sel.onchange = function () { load(sel.value); };
     $('bkGen').textContent = 'Brief built ' + d.generated;
     load(d.reports[0].report);
