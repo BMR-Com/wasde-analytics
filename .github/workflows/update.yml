@@ -6,6 +6,7 @@ on:
     - cron: '0 20 10 * *'
     - cron: '0 20 11 * *'
     - cron: '0 20 12 * *'
+    - cron: '0 14 13 * *'   # catch-up rebuild of the brief
   workflow_dispatch:
 
 jobs:
@@ -24,7 +25,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pandas numpy curl_cffi python-dateutil -q
+        run: pip install pandas numpy curl_cffi python-dateutil requests -q
 
       - name: Run pipeline
         env:
@@ -32,6 +33,10 @@ jobs:
           GITHUB_REPOSITORY:  ${{ github.repository }}
           MASTER_CSV_PATH:    master_wasde.csv
         run: python process.py full   # <-- CHANGED: was json-from-release
+
+      - name: Build WASDE brief
+        continue-on-error: true
+        run: python brief.py
 
       - name: Commit & push updated JSONs
         run: |

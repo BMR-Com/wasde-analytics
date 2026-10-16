@@ -95,6 +95,41 @@ table.bs tr:last-child td{border-bottom:none}
 .pred-badge{font-size:9.5px;padding:2px 7px;background:#fffbf0;color:#7a5000;border-bottom:1px solid #e8d8a0;min-height:18px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .chart-box{position:relative;height:200px;padding:4px}
 
+/* ── WASDE brief ───────────────────────────────────────────── */
+.bk-card{background:#fff;border:1px solid #e5e5e0;border-radius:8px;padding:1rem 1.1rem;margin-bottom:1rem}
+.bk-ctl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:.75rem}
+.bk-ctl .gen{font-size:10px;color:#999;margin-left:auto}
+.bk-pill{padding:3px 11px;border-radius:99px;font-size:11px;cursor:pointer;border:1px solid #ccc;background:#fff}
+.bk-pill.on{background:#1a2e1a;color:#fff;border-color:#1a2e1a}
+.bk-top{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin:.25rem 0 .6rem}
+.bk-title{font-size:15px;font-weight:600;color:#1a2e1a}
+.bk-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:1.2rem}
+@media(max-width:900px){.bk-grid{grid-template-columns:1fr}}
+.bk-text p{font-size:13px;line-height:1.6;color:#2a2a2a;margin-bottom:.55rem}
+.bk-h{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1a2e1a;margin-top:.3rem}
+.bk-sub{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#1a2e1a;margin:1rem 0 .4rem;border-left:3px solid #1a2e1a;padding-left:.45rem}
+.bk-scroll{overflow-x:auto}
+table.bk-t{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+table.bk-t th{background:#1a2e1a;color:#fff;font-weight:500;font-size:11px;padding:6px 8px;text-align:right;white-space:nowrap}
+table.bk-t th.l,table.bk-t td.l{text-align:left}
+table.bk-t td{padding:5px 8px;border-bottom:1px solid #eee;text-align:right;line-height:1.3;vertical-align:top}
+table.bk-t tbody tr:nth-child(even) td{background:#fafaf8}
+table.bk-t tr.agg td{background:#eef3ee!important;font-weight:600}
+table.bk-t td b{font-weight:600}
+.bk-f td{font-size:12px}
+.bk-ctx{color:#555;font-size:12px}
+.bk-up{color:#166534;font-size:11.5px}.bk-dn{color:#b91c1c;font-size:11.5px}.bk-z{color:#aaa;font-size:11px}
+.bk-tag{display:inline-block;border-radius:4px;padding:1px 7px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.bk-tag.big{font-size:12px;padding:4px 10px}
+.bk-tag.bullish{background:#dcfce7;color:#166534}.bk-tag.bearish{background:#fee2e2;color:#991b1b}.bk-tag.neutral{background:#f1f1ee;color:#555}
+.bk-note{font-size:10.5px;color:#888;margin-top:.3rem}
+/* larger, easier-to-read balance-sheet tables */
+table.bs{font-size:11.5px}
+table.bs th{font-size:10.5px;padding:4px 6px}
+table.bs td{font-size:11.5px;padding:3px 6px}
+table.bs tbody tr:nth-child(even) td{background:#fafaf8}
+.chg{font-size:10px}
+
 /* ── Print styles ──────────────────────────────────────────── */
 @media screen{
   .print-title,.print-meta{display:none}
@@ -201,7 +236,7 @@ table.bs tr:last-child td{border-bottom:none}
 <body>
 
 <header>
-  <h1>WASDE Analytics Dashboard</h1>
+  <h1>BMR-Com · WASDE Analytics</h1>
   <div class="hright"><div id="last-updated"></div></div>
 </header>
 
@@ -219,11 +254,20 @@ table.bs tr:last-child td{border-bottom:none}
       <option>Loading...</option>
     </select>
   </div>
-  <button class="print-btn" onclick="window.print()">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-    Print / Save PDF
-  </button>
-  <div style="font-size:11px;color:#888;padding-top:12px">A4 landscape · 8 balance sheets · auto-updates monthly</div>
+  <div style="font-size:11px;color:#888;padding-top:12px">Balance sheets update automatically after each WASDE release</div>
+</div>
+
+<div class="section" id="bkSec">
+  <div class="sec-title">WASDE Brief — what changed, how it compares with history, and what it means</div>
+  <div class="bk-card">
+    <div class="bk-ctl">
+      <label style="font-size:10px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.06em">Report</label>
+      <select id="bkReport"></select>
+      <div id="bkPills" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+      <span class="gen" id="bkGen"></span>
+    </div>
+    <div id="bkBody"><div class="spinner">Loading brief…</div></div>
+  </div>
 </div>
 
 <div class="section">
@@ -1571,5 +1615,6 @@ function toggleYear(year,el){
 
 boot();
 </script>
+<script src="js/brief.js?v=2026.10.16"></script>
 </body>
 </html>
