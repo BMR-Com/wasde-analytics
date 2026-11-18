@@ -2,6 +2,9 @@ name: Monthly WASDE update
 
 on:
   schedule:
+    - cron: '7 17 8-14 * 1-5'    # WASDE is out at 12:00 ET on a weekday between the 8th and 14th: 12:07/13:07 ET
+    - cron: '37 17 8-14 * 1-5'
+    - cron: '13 19 8-14 * 1-5'
     - cron: '0 20 9 * *'   # Run on 9th, 10th, 11th, 12th to catch release
     - cron: '0 20 10 * *'
     - cron: '0 20 11 * *'
